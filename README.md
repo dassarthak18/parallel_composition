@@ -13,15 +13,15 @@ $\bigwedge_{t \in T(V_{init})}{t_1}$
 ### EXCLUDE Clause
 If one edge is active at a given depth, no other edge can be active at that depth.
 
-$\bigvee_{1 \leq n \leq k}{\bigvee_{i \in E}(i_n \implies -\bigwedge_{j \in T(E\setminus \{i\})}{j_n})}$
+$\bigvee_{1 \leq n \leq k}{\bigvee_{i \in E}(i_n \implies -\bigwedge_{j \in E\setminus i}{j_n})}$
 
 ### NEXT Clause
 If an edge is active at a given depth, must include either of the outgoing edges from that location in the next depth.
 
-
+$\bigvee_{1 \leq n \leq k-1}{\bigvee_{i = (u,v) \in E}(i_n \implies \bigwedge_{j \in T(v)}{j_{n+1}})}$
 
 ### DEST Clause
-At depth $k$, the edge must be an incoming edge of the location. Let us assume that the function $S(X)$ returns the outgoing transitions from the locations in set $X \subseteq V$, and $V_{dest} \subseteq V$ is the set of destination (forbidden) locations.
+At depth $k$, the edge must be an incoming edge of the location. Let us assume that the function $S(X)$ returns the incoming transitions to the locations in set $X \subseteq V$, and $V_{dest} \subseteq V$ is the set of destination (forbidden) locations.
 
 $\bigwedge_{t \in S(V_{dest})}{t_k}$
 
