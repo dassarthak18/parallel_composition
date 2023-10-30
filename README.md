@@ -31,4 +31,6 @@ If the solver has retrieved a path, then we negate the path and add that constra
 
 $-\bigwedge_{x \in \Pi}{x}$
 
-## Flow
+## Flow of the Algorithm
+
+<img src="./img/flowchart.png"/>
