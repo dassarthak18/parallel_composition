@@ -1,4 +1,0 @@
-rod_0 rod_1 add_1
-rod_1 rod_0 remove_1
-rod_0 rod_2 add_2
-rod_2 rod_0 remove_2
