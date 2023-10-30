@@ -11,9 +11,19 @@ def read_graph(filename):
 	for line in graph.readlines():
 		arr = line.strip().split()
 		G.add_edge(arr[0], arr[1], transition=arr[2])
+
+	indices = []
+	for i, j in enumerate(filename):
+		if j == "/":
+			indices.append(i)
+	if len(indices) > 0:
+		name = filename[indices[-1]+1:-4]
+	else:
+		name = filename[:-4]
+
 	i = 0
 	for n in G.nodes():
-		G.add_edge(n,n, transition=f'{filename[:-4]}_stutter_{i}')
+		G.add_edge(n,n, transition=f'{name}_stutter_{i}')
 		i = i+1
 
 	#nx.draw(G,pos=nx.spring_layout(G))
@@ -140,32 +150,6 @@ def generate_constraints(G, S, k, filename):
 
 	return S
 
-def exclude(Graphs, S, k):
-	transitions = set()
-	for G in graphs:
-		for i in G.edges():
-			transitions.add(G[i[0]][i[1]][0]["transition"])
-	transitions = list(transitions) # list of all transitions in the graph
-	print(transitions)
-	for n in range(k):
-		for i in transitions:
-			exp2a = z3.Bool("exp2a")
-			exp2a = True
-			#print()
-			#print(i)
-			#print()
-			for j in transitions:
-				if j != i:
-					#print(j)
-					if exp2a == True:
-						exp2a = z3.Not(z3.Bool(f"{j}_{n+1}"))
-					else:
-						exp2a = z3.And(exp2a,z3.Not(z3.Bool(f"{j}_{n+1}")))
-			#print(exp2a)
-			S.add(z3.Implies(z3.Bool(f"{i}_{n+1}"),exp2a))
-			#print(z3.Implies(z3.Bool(f"{i}_{n+1}"),z3.Not(exp2a)))
-	#print(exp2)
-
 def negation(S, model):
 	# Getting the model for this run
 	trues = []
@@ -191,6 +175,7 @@ def negation(S, model):
 if __name__ == "__main__":
 	# Reading graphs for individual automata in the hybrid system
 	files = ["benchmarks/nuclear_reactor/rod_1","benchmarks/nuclear_reactor/rod_2","benchmarks/nuclear_reactor/controller"]
+	depth = 1
 	#files = ["rod_1"]
 	graphs = []
 	for i in files:
@@ -201,13 +186,13 @@ if __name__ == "__main__":
 
 	# Generating the constraints for a run of the SAT solver
 	for i in range(len(files)):
-		S = generate_constraints(graphs[i], S, 4, files[i]+".cfg")
+		S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
 		#print(S.check())
-	#S = exclude(graphs,S,5)
+	#S = exclude(graphs, S, depth)
 
 	# Getting and printing the model for the run
 	#print(str(S.check()))
-	count = 0
+	#count = 0
 	while str(S.check()) == "sat":
 		#S.check()
 		m = S.model()
@@ -216,4 +201,4 @@ if __name__ == "__main__":
 		#for d in m.decls():
 		#	if m[d] == True:
 		#	    print ("%s = %s" % (d.name(), m[d]))
-	print(count)
+	#print(count)
