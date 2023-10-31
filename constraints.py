@@ -150,14 +150,29 @@ def generate_constraints(G, S, k, filename):
 
 	return S
 
-def negation(S, model):
+def negation(S, model, paths):
 	# Getting the model for this run
 	trues = []
 	for d in model.decls():
 		if model[d] == True:
 			#print(d.name())
 			trues.append(d.name())
-	print(trues)
+	#print(trues)
+
+	P = {}
+	#print(i)
+	for j in trues:
+		x = j.split('_')
+		n = len(x[-1])
+		if int(x[-1]) not in P:
+			P[int(x[-1])] = [j[:-n-1]]
+		else:
+			P[int(x[-1])].append(j[:-n-1])
+	keys = list(P.keys())
+	keys.sort()
+	P = {i: P[i] for i in keys}
+	#print(P)
+	paths.append(P)
 
 	# Negating the model
 	exp = z3.Bool("exp")
@@ -171,34 +186,3 @@ def negation(S, model):
 
 	S.add(z3.Not(exp))
 	return S
-
-if __name__ == "__main__":
-	# Reading graphs for individual automata in the hybrid system
-	files = ["benchmarks/nuclear_reactor/rod_1","benchmarks/nuclear_reactor/rod_2","benchmarks/nuclear_reactor/controller"]
-	depth = 1
-	#files = ["rod_1"]
-	graphs = []
-	for i in files:
-		graphs.append(read_graph(i+".txt"))
-
-	# Creating a single solver for the entire system
-	S = z3.Solver()
-
-	# Generating the constraints for a run of the SAT solver
-	for i in range(len(files)):
-		S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
-		#print(S.check())
-	#S = exclude(graphs, S, depth)
-
-	# Getting and printing the model for the run
-	#print(str(S.check()))
-	#count = 0
-	while str(S.check()) == "sat":
-		#S.check()
-		m = S.model()
-		negation(S,m)
-		count = count+1
-		#for d in m.decls():
-		#	if m[d] == True:
-		#	    print ("%s = %s" % (d.name(), m[d]))
-	#print(count)

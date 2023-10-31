@@ -1,25 +1,37 @@
 import z3
-import itertools
-import networkx as nx
 import matplotlib.pyplot as plt
 
 from constraints import *
 
-if __name__ == "__main__":
-	# Reading graphs for individual automata in the hybrid system
-	G = read_graph("benchmarks/nuclear_reactor/rod_1.txt")
-	H = read_graph("benchmarks/nuclear_reactor/controller.txt")
+# Reading graphs for individual automata in the hybrid system
+files = ["benchmarks/nuclear_reactor/rod_1","benchmarks/nuclear_reactor/rod_2","benchmarks/nuclear_reactor/controller"]
+depth = 5
+#files = ["rod_1"]
+graphs = []
+for i in files:
+	graphs.append(read_graph(i+".txt"))
 
-	# Creating a single solver for the entire system
-	S = z3.Solver()
+# Creating a single solver for the entire system
+S = z3.Solver()
 
-	# Generating the constraints for a run of the SAT solver
-	S = generate_constraints(G, S, 3, "benchmarks/nuclear_reactor/rod_1.cfg")
-	#print(S)
-	#S = generate_constraints(H, S, 3, "controller.cfg")
-	#print(S)
+# Generating the constraints for a run of the SAT solver
+for i in range(len(files)):
+	S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
+	#print(S.check())
+#S = exclude(graphs, S, depth)
 
-	# Getting and printing the model for the run
-	while str(S.check()) == "sat":
-		m = S.model()
-		negation(S,m)
+# Getting and printing the model for the run
+#print(str(S.check()))
+paths = []
+count = 0
+while str(S.check()) == "sat":
+	#S.check()
+	m = S.model()
+	negation(S, m, paths)
+	print(f"Retrieved path {count+1}:", paths[count])
+	count = count+1
+	#for d in m.decls():
+	#	if m[d] == True:
+	#	    print ("%s = %s" % (d.name(), m[d]))
+#print(paths)
+print(f"No. of paths retrieved: {count}.")
