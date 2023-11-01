@@ -5,7 +5,7 @@ from constraints import *
 
 # Reading graphs for individual automata in the hybrid system
 files = ["benchmarks/nuclear_reactor/rod_1","benchmarks/nuclear_reactor/rod_2","benchmarks/nuclear_reactor/controller"]
-depth = 5
+depth = 15
 #files = ["rod_1"]
 graphs = []
 for i in files:
@@ -19,6 +19,12 @@ for i in range(len(files)):
 	S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
 	#print(S.check())
 #S = exclude(graphs, S, depth)
+
+stutter, shared = get_all_vars(S) # Get all variable names
+#print(stutter)
+#print(shared)
+#exit(0)
+S = pruning_constraints(S, stutter, shared, depth)
 
 # Getting and printing the model for the run
 #print(str(S.check()))

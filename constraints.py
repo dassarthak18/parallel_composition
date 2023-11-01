@@ -150,6 +150,86 @@ def generate_constraints(G, S, k, filename):
 
 	return S
 
+# Function to retrieve all variable names from an expression
+def get_vars(expr, var):
+	if z3.is_const(expr):
+		if expr.decl().kind() == z3.Z3_OP_UNINTERPRETED:
+			var.add(expr.decl().name())
+	else:
+		for sub_expr in expr.children():
+			get_vars(sub_expr, var)
+
+# Function to retrieve all variable names from a SAT solver
+def get_all_vars(S):
+	var = set()
+	for expr in S.assertions():
+		get_vars(expr, var)
+
+	stutter = []
+	shared = []
+
+	for i in var:
+		if "stutter" in i:
+			stutter.append(i)
+		else:
+			shared.append(i)
+
+	return stutter, shared
+
+# Function to generate constraints for path-pruning based optimization
+def pruning_constraints(S, stutter, shared, k):
+
+	arr = []
+	for i in range(k):
+		n = len(str(i+1))
+		#arr.append([])
+		for j in stutter:
+			if j[len(j)-n:] == str(i+1):
+				arr.append(j[:len(j)-n-1])
+	#print(arr)
+
+	dic = {}
+	for i in arr:
+		n = i.find("stutter")
+		#print(j[:n-1])
+		if i[:n-1] in dic:
+			if i not in dic[i[:n-1]]:
+				dic[i[:n-1]].append(i)
+		else:
+			dic[i[:n-1]] = []
+	#print(dic)
+
+	''' GLOBAL WAITING
+	all member automata are not allowed
+	to enable the stutter transition simultaneously
+	'''
+	all_combinations = list(itertools.product(*dic.values()))
+	#print(all_combinations)
+	for i in range(k):
+		for j in all_combinations:
+			exp1a = z3.Bool("exp1a")
+			exp1a = False
+			for x in j:
+				if exp1a == False:
+					exp1a = z3.Bool(f"{x}_{i+1}")
+				else:
+					exp1a = z3.And(exp1a, z3.Bool(f"{x}_{i+1}"))
+			S.add(z3.Not(exp1a))
+			#print(exp1a)
+
+	''' REPEATED WAITING FOR SHARED LABELS
+	all member automata with this specific shared label are not allowed
+	to enable the stutter transition simultaneously
+	'''
+
+	'''RANDOM WAITING
+	for each member automaton, a stutter transition is allowed,
+	if and only if its next label is a shared label or a stutter
+	'''
+
+	return S
+
+# Function to negate an already retrieved path
 def negation(S, model, paths):
 	# Getting the model for this run
 	trues = []
