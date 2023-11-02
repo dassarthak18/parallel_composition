@@ -9,8 +9,9 @@ files = ["benchmarks/nuclear_reactor/rod_1","benchmarks/nuclear_reactor/rod_2","
 
 try:
 	depth = int(sys.argv[1])
+	opt = int(sys.argv[2])
 except:
-  print("Please enter the depth of BMC as a command line argument.")
+  print("Please enter the depth of BMC and whether to set path prunng-based opimization as command line arguments.")
   exit(0)
 
 #files = ["rod_1"]
@@ -27,12 +28,13 @@ for i in range(len(files)):
 	#print(S.check())
 #S = exclude(graphs, S, depth)
 
-stutter, shared, local = get_all_vars(graphs, files, S, depth) # Get all variable names
-#print(stutter)
-#print(shared)
-#print(local)
-#exit(0)
-S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
+if opt == 1:
+	stutter, shared, local = get_all_vars(graphs, files, S, depth) # Get all variable names
+	#print(stutter)
+	#print(shared)
+	#print(local)
+	#exit(0)
+	S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
 
 # Getting and printing the model for the run
 #print(str(S.check()))

@@ -240,7 +240,7 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 
 	local_dic = {}
 	for i in stutter_dic:
-		local_dic[i] = []
+		local_dic[i] = set()
 	#print(local_dic)
 
 	for i in range(len(graphs)):
@@ -257,7 +257,7 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 			for l in graphs[i].edges.data():
 				if l[2]['transition'] in j:
 					#print(j)
-					local_dic[name].append(j)
+					local_dic[name].add(l[2]['transition'])
 					break
 	#print(local_dic)
 
@@ -297,12 +297,25 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 						exp2a = z3.Not(z3.Bool(f"{x}_{i-1}"))
 					else:
 						exp2a = z3.Or(exp2a, z3.Not(z3.Bool(f"{x}_{i-1}")))
-			S.add(z3.Implies(z3.Bool(f"{j}_{i}") ,exp2a))
+			S.add(z3.Implies(z3.Bool(f"{j}_{i}"), exp2a))
 
 	'''RANDOM WAITING
 	for each member automaton, a stutter transition is allowed,
 	if and only if its next label is a shared label or a stutter
 	'''
+	for i in local_dic:
+		for j in local_dic[i]:
+			#print(j)
+			for n in range(2, k):
+				exp3a = z3.Bool("exp3a")
+				exp3a = False
+				for l in stutter_dic[i]:
+					if exp3a == False:
+						exp3a = z3.Bool(f"{l}_{n-1}")
+					else:
+						exp3a = z3.Or(exp3a, z3.Bool(f"{l}_{n-1}"))
+				#print(z3.Implies(z3.Bool(f"{j}_{n}"), z3.Not(exp3a)))
+				S.add(z3.Implies(z3.Bool(f"{j}_{n}"), z3.Not(exp3a)))
 
 	return S
 
