@@ -41,7 +41,9 @@ $\bigwedge_{t \in S'}{\bigwedge_{2 \leq i \leq k}{(t_i \implies \bigvee_{j \in T
 
 ### RANDOM WAITING Clause
 
-For each member automaton, a stutter transition is allowed, if and only if its next label is a shared label or a stutter.
+For each member automaton, a stutter transition is allowed, if and only if its next label is a shared label or a stutter. Let us assume the function $V(H)$ returns the set of local transitions for a graph $H$.
+
+$\bigwedge_{g \in G, t \in V(g)}{\bigwedge_{2 \leq i \leq k}{(t_i \implies - \bigvee_{g' \in G, t' \in T(g)}{t'_{i-1}})}}$
 
 ## Negation Clause
 
