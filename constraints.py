@@ -160,24 +160,43 @@ def get_vars(expr, var):
 			get_vars(sub_expr, var)
 
 # Function to retrieve all variable names from a SAT solver
-def get_all_vars(S):
+def get_all_vars(graphs, files, S, k):
 	var = set()
 	for expr in S.assertions():
 		get_vars(expr, var)
 
 	stutter = []
-	shared = []
+	local = []
 
 	for i in var:
 		if "stutter" in i:
 			stutter.append(i)
 		else:
-			shared.append(i)
+			local.append(i)
+	#print(stutter, local)
 
-	return stutter, shared
+	dic ={}
+	for i in local:
+		dic[i] = 0
+	#print(dic)
+	shared = []
+	n = len(str(k))
+	for i in dic:
+		name = i[:-n-1]
+		for j in graphs:
+			for x in j.edges.data():
+				if x[2]['transition'] == name:
+					dic[i] = dic[i] + 1
+	#print(dic)
+	for i in dic:
+		if dic[i] > 1:
+			shared.append(i)
+			local.remove(i)
+
+	return stutter, shared, local
 
 # Function to generate constraints for path-pruning based optimization
-def pruning_constraints(S, stutter, shared, k):
+def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 
 	arr = []
 	for i in range(k):
@@ -188,25 +207,68 @@ def pruning_constraints(S, stutter, shared, k):
 				arr.append(j[:len(j)-n-1])
 	#print(arr)
 
-	dic = {}
+	stutter_dic = {}
 	for i in arr:
 		n = i.find("stutter")
 		#print(j[:n-1])
-		if i[:n-1] in dic:
-			if i not in dic[i[:n-1]]:
-				dic[i[:n-1]].append(i)
+		if i[:n-1] in stutter_dic:
+			if i not in stutter_dic[i[:n-1]]:
+				stutter_dic[i[:n-1]].append(i)
 		else:
-			dic[i[:n-1]] = []
-	#print(dic)
+			stutter_dic[i[:n-1]] = []
+	#print(stutter_dic)
+
+	shared_dic = {}
+	n = len(str(k))
+	for i in shared:
+		shared_dic[i[:-n-1]] = []
+	for i in range(len((graphs))):
+		indices = []
+		for j, l in enumerate(files[i]):
+			if l == "/":
+				indices.append(j)
+		if len(indices) > 0:
+			name = files[i][indices[-1]+1:]
+		else:
+			name = files[i]
+		for j in shared_dic:
+			for l in graphs[i].edges.data():
+				if l[2]['transition'] == j:
+					shared_dic[j].append(name)
+					break
+	#print(shared_dic)
+
+	local_dic = {}
+	for i in stutter_dic:
+		local_dic[i] = []
+	#print(local_dic)
+
+	for i in range(len(graphs)):
+		indices = []
+		for j, l in enumerate(files[i]):
+			if l == "/":
+				indices.append(j)
+		if len(indices) > 0:
+			name = files[i][indices[-1]+1:]
+		else:
+			name = files[i]
+		#print(name)
+		for j in local:
+			for l in graphs[i].edges.data():
+				if l[2]['transition'] in j:
+					#print(j)
+					local_dic[name].append(j)
+					break
+	#print(local_dic)
 
 	''' GLOBAL WAITING
 	all member automata are not allowed
 	to enable the stutter transition simultaneously
 	'''
-	all_combinations = list(itertools.product(*dic.values()))
+	glob = list(itertools.product(*stutter_dic.values()))
 	#print(all_combinations)
 	for i in range(k):
-		for j in all_combinations:
+		for j in glob:
 			exp1a = z3.Bool("exp1a")
 			exp1a = False
 			for x in j:
@@ -221,6 +283,21 @@ def pruning_constraints(S, stutter, shared, k):
 	all member automata with this specific shared label are not allowed
 	to enable the stutter transition simultaneously
 	'''
+	for i in range(2, k):
+		for j in shared_dic:
+			exp2a = z3.Bool("exp2a")
+			exp2a = False
+			#print(f"{j}_{i}", end=" => NOT ")
+			#print(shared_dic[j])
+			for graph in shared_dic[j]:
+				#print(graph)
+				for x in stutter_dic[graph]:
+					#print(f"{x}_{i-1}", end=" & ")
+					if exp2a == False:
+						exp2a = z3.Not(z3.Bool(f"{x}_{i-1}"))
+					else:
+						exp2a = z3.Or(exp2a, z3.Not(z3.Bool(f"{x}_{i-1}")))
+			S.add(z3.Implies(z3.Bool(f"{j}_{i}") ,exp2a))
 
 	'''RANDOM WAITING
 	for each member automaton, a stutter transition is allowed,

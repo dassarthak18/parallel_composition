@@ -27,11 +27,12 @@ for i in range(len(files)):
 	#print(S.check())
 #S = exclude(graphs, S, depth)
 
-stutter, shared = get_all_vars(S) # Get all variable names
+stutter, shared, local = get_all_vars(graphs, files, S, depth) # Get all variable names
 #print(stutter)
 #print(shared)
+#print(local)
 #exit(0)
-S = pruning_constraints(S, stutter, shared, depth)
+S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
 
 # Getting and printing the model for the run
 #print(str(S.check()))
