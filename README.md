@@ -35,7 +35,9 @@ $\bigwedge_{1 \leq i \leq k}{-(\bigwedge_{0 \leq j \leq n-1}{t^j_i \in T(G[j])})
 
 ### REPEATED WAITING FOR SHARED LABELS Clause
 
-All member automata with this specific shared label are not allowed to enable the stutter transition simultaneously.
+For any shared label, all member automata with this specific shared label are not allowed to enable the stutter transition simultaneously. Let us assume $S'$ is the list of all shared transitions and the function $U(t)$ returns the set of underlying graphs for automata with the shared transition $t$.
+
+$\bigwedge_{t \in S'}{\bigwedge_{2 \leq i \leq k}{(t_i \implies \bigvee_{j \in T(U(t))}{- j_{i-1}})}}$
 
 ### RANDOM WAITING Clause
 
