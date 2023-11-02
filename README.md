@@ -1,7 +1,7 @@
 # Parallel Composition
 A SAT-encoding for retrieving all paths at a given depth from the parallel composition of a graph in Python using z3Py.
 
-## Constraints for a Individual Automata
+## Constraints for an Individual Automata
 
 Given an automata, we can find its underlying graph $G(V,E)$. Our aim is to generate SAT constraints to retrieve all paths from the graph such that depth is $k$. We add *stutter transitions* which are essentially self-loops. By depth, we denote the number of transitions in the path.
 
