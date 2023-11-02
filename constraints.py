@@ -266,3 +266,28 @@ def negation(S, model, paths):
 
 	S.add(z3.Not(exp))
 	return S
+
+# Function to pretty print a retrieved path
+def print_path(graphs, files, p, k):
+	#print(p)
+	for i in range(len(graphs)): # Iterate over every graph
+		filename = files[i]
+		G = graphs[i]
+		indices = []
+		for i, j in enumerate(filename):
+			if j == "/":
+				indices.append(i)
+		if len(indices) > 0:
+			name = filename[indices[-1]+1:]
+		else:
+			name = filename
+		print(name+": ", end="")
+		for i in p:
+			for j in p[i]:
+				for x in G.edges.data():
+					if j == x[2]['transition']:
+						if i == k:
+							print(j)
+						else:
+							print(j, end=" -> ")
+						break

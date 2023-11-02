@@ -1,11 +1,18 @@
 import z3
 import matplotlib.pyplot as plt
+import sys
 
 from constraints import *
 
 # Reading graphs for individual automata in the hybrid system
 files = ["benchmarks/nuclear_reactor/rod_1","benchmarks/nuclear_reactor/rod_2","benchmarks/nuclear_reactor/controller"]
-depth = 15
+
+try:
+	depth = int(sys.argv[1])
+except:
+  print("Please enter the depth of BMC as a command line argument.")
+  exit(0)
+
 #files = ["rod_1"]
 graphs = []
 for i in files:
@@ -34,10 +41,12 @@ while str(S.check()) == "sat":
 	#S.check()
 	m = S.model()
 	negation(S, m, paths)
-	print(f"Retrieved path {count+1}:", paths[count])
+	#print(f"Retrieved path {count+1}:", paths[count])
+	print(f"\nRetrieved path {count+1}.")
+	print_path(graphs, files, paths[count], depth)
 	count = count+1
 	#for d in m.decls():
 	#	if m[d] == True:
 	#	    print ("%s = %s" % (d.name(), m[d]))
 #print(paths)
-print(f"No. of paths retrieved: {count}.")
+print(f"\nNo. of paths retrieved: {count}.")
