@@ -1,10 +1,12 @@
+# Solving affine DE using SAT solver and comparing with the exact result
+
 import numpy as np
 import z3
 
+from constraints import *
+
 t = float(input("Enter the time horizon : "))
 e = np.exp(1) # Euler number
-#time_step = input("Enter the time step size : ")
-#no_of_steps = int(t/time_step)
 
 # Consider an affine DE of the form x' = ax + b
 a = float(input("Enter the value of a : "))
@@ -19,7 +21,7 @@ print(f"Definite Integral: x_{t} = {x_t}")
 
 # SAT Solving
 S = z3.Solver()
-S.add(z3.Real(f"x_{t}") == ((a*x_0 + b)*e**(a*t) - b)/a)
+S = DE_constraints(S, t, a, b, x_0)
 
 if S.check() == z3.sat:
 	model = S.model()
