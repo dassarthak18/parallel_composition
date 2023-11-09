@@ -358,7 +358,7 @@ def negation(S, model, paths):
 	return S
 
 # Function to generate constraints for a given affine DE
-def generate_constraints(S, t, a, b, x_0):
+def DE_constraints(S, t, a, b, x_0):
 	S.add(z3.Real(f"x_{t}") == ((a*x_0 + b)*e**(a*t) - b)/a)
 	return S
 
