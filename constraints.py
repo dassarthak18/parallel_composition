@@ -1,6 +1,7 @@
 import z3
 import itertools
 import networkx as nx
+import numpy as np
 import matplotlib.pyplot as plt
 
 # Function to read graph from file and store as a networkx graph
@@ -359,6 +360,7 @@ def negation(S, model, paths):
 
 # Function to generate constraints for a given affine DE
 def DE_constraints(S, t, a, b, x_0):
+	e = np.exp(1)
 	S.add(z3.Real(f"x_{t}") == ((a*x_0 + b)*e**(a*t) - b)/a)
 	return S
 
