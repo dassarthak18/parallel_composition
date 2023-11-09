@@ -1,10 +1,10 @@
-# Solving affine DE using SAT solver and comparing with the exact result
-
 import numpy as np
+import sys
 import z3
 
 from constraints import *
 
+# Solving affine ODE using SAT solver and comparing with the exact result
 t = float(input("Enter the time horizon : "))
 e = np.exp(1) # Euler number
 
@@ -21,7 +21,7 @@ print(f"Definite Integral: x_{t} = {x_t}")
 
 # SAT Solving
 S = z3.Solver()
-S = DE_constraints(S, t, a, b, x_0)
+S = affine_ODE_constraints(S, t, a, b, x_0)
 
 if S.check() == z3.sat:
 	model = S.model()

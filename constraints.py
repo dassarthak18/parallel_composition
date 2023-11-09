@@ -3,6 +3,7 @@ import itertools
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import sympy as sp
 
 # Function to read graph from file and store as a networkx graph
 def read_graph(filename):
@@ -358,8 +359,8 @@ def negation(S, model, paths):
 	S.add(z3.Not(exp))
 	return S
 
-# Function to generate constraints for a given affine DE
-def DE_constraints(S, t, a, b, x_0):
+# Function to generate constraints for a given affine ODE
+def affine_ODE_constraints(S, t, a, b, x_0):
 	e = np.exp(1)
 	S.add(z3.Real(f"x_{t}") == ((a*x_0 + b)*e**(a*t) - b)/a)
 	return S
