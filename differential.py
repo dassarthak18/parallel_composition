@@ -16,7 +16,10 @@ print(f"The differential equation is x' = {a}x + {b}.")
 x_0 = float(input("Enter the initial value of x : "))
 
 # Solution: x_t = ((a*x_0 + b)*e^(a*t) - b)/a
-x_t = ((a*x_0 + b)*np.exp(a*t) - b)/a
+if a != 0:
+	x_t = ((a*x_0 + b)*np.exp(a*t) - b)/a
+else:
+	x_t = x_0 + b*t
 print(f"Definite Integral: x_{t} = {x_t}")
 
 # SAT Solving

@@ -361,8 +361,11 @@ def negation(S, model, paths):
 
 # Function to generate constraints for a given affine ODE
 def affine_ODE_constraints(S, t, a, b, x_0):
-	e = np.exp(1)
-	S.add(z3.Real(f"x_{t}") == ((a*x_0 + b)*e**(a*t) - b)/a)
+	if a != 0:
+		e = np.exp(1)
+		S.add(z3.Real(f"x_{t}") == ((a*x_0 + b)*e**(a*t) - b)/a)
+	else:
+		S.add(z3.Real(f"x_{t}") == x_0 + b*t)
 	return S
 
 # Function to pretty print a retrieved path
