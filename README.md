@@ -63,11 +63,11 @@ $-\bigwedge_{x \in \Pi}{x}$
 
 <img src="./img/flowchart.png"/>
 
-# Solving Affine Ordinary Differential Equations using SAT
+# Solving Linear and Affine ODE using SAT
 
-Affine differential equations are ODE of the form $x' = ax + b$. The exact solution to ODEs of this form can be found using definite integration. The solution for a _time horizon_ of $t$ is given as $x(t) = (x(0) + b/a).e^t - b/a$, where $e$ is the Euler number. We provide a function to encode this solution as a SAT constraint and solve, with the aim of encoding an entire hybrid automaton into SAT in the future. We compare the result obtained using numerical computation with the result obtained using z3Py.
+Linear differential equations are ODE of the form $x' = a$. The exact solution to ODEs of this form can be found using definite integration. The solution for a _time horizon_ of $t$ is given as $x(t) = x(0) + a.t$, where $e$ is the Euler number. Affine differential equations are ODE of the form $x' = ax + b$. The exact solution to ODEs of this form can be found using definite integration. The solution for a _time horizon_ of $t$ is given as $x(t) = (x(0) + b/a).e^t - b/a$, where $e$ is the Euler number.
 
-To run the program, use the following command:
+We provide a function to encode these solutions as a SAT constraint and solve, with the aim of encoding an entire hybrid automaton into SAT in the future. We compare the result obtained using numerical computation with the result obtained using z3Py. To run the program, use the following command:
 
 ```bash
 python3 differential.py
