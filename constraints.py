@@ -28,9 +28,23 @@ def read_graph(filename):
 		G.add_edge(n,n, transition=f'{name}_stutter_{i}')
 		i = i+1
 
-	#nx.draw(G,pos=nx.spring_layout(G))
-	#plt.show()
 	return G
+
+# Function to read automata specs from file and store as a 2-tuple dictionary
+def read_automata(filename):
+	locs = open(filename+"_locations.txt", 'r')
+	locations = {}
+	for line in locs.readlines():
+		arr = line.strip().split()
+		locations[arr[0]] = [arr[1], arr[2]] # {location: [flow, invariant]}
+
+	trans = open(filename+"_transitions.txt", 'r')
+	transitions = {}
+	for line in trans.readlines():
+		arr = line.strip().split()
+		transitions[arr[0]] = [arr[1], arr[2]] # {transition: [guard, reset]}
+
+	return (locations, transitions)
 
 # Function to generate constraints from graph
 def generate_constraints(G, S, k, filename):
@@ -43,7 +57,6 @@ def generate_constraints(G, S, k, filename):
 		else:
 			dest = line.strip().split() # forbidden state
 			i = i+1
-	#print(init,dest)
 
 	''' INIT Constraints: 
 		for all initial states, must include
@@ -59,7 +72,6 @@ def generate_constraints(G, S, k, filename):
 			else:
 				exp1 = z3.Or(exp1,z3.Bool(f"{trans}_1"))
 		S.add(exp1)
-		#print(exp1)
 
 	''' EXCLUDE Constraints: 
 		if one edge is active at a given depth,
@@ -70,25 +82,17 @@ def generate_constraints(G, S, k, filename):
 	for i in G.edges():
 		transitions.add(G[i[0]][i[1]][0]["transition"])
 	transitions = list(transitions) # list of all transitions in the graph
-	#print(transitions)
 	for n in range(k):
 		for i in transitions:
 			exp2a = z3.Bool("exp2a")
 			exp2a = False
-			#print()
-			#print(i)
-			#print()
 			for j in transitions:
 				if j != i:
-					#print(j)
 					if exp2a == False:
 						exp2a = z3.Bool(f"{j}_{n+1}")
 					else:
 						exp2a = z3.Or(exp2a,z3.Bool(f"{j}_{n+1}"))
-			#print(exp2a)
 			S.add(z3.Implies(z3.Bool(f"{i}_{n+1}"),z3.Not(exp2a)))
-			#print(z3.Implies(z3.Bool(f"{i}_{n+1}"),z3.Not(exp2a)))
-	#print(exp2)
 
 	''' NEXT Constraints: 
 		if an edge is active at a given depth,
@@ -103,12 +107,8 @@ def generate_constraints(G, S, k, filename):
 			in_edges.append(G[j[0]][j[1]][0]["transition"])
 		for j in G.out_edges(i):
 			out_edges.append(G[j[0]][j[1]][0]["transition"])
-		#print(i,in_edges,out_edges)
 		prod = list(itertools.product(in_edges,out_edges))
 		products.extend(prod)
-		#print(prod)
-	#for i in products:
-	#	print(i)
 	adjacency_dict = {} # adjacency list for products array
 	for i in products:
 		u, v = i
@@ -116,7 +116,6 @@ def generate_constraints(G, S, k, filename):
 			adjacency_dict[u].append(v)
 		else:
 			adjacency_dict[u] = [v]
-	#print(adjacency_dict)
 	for n in range(k-1):
 		for i, j in adjacency_dict.items():
 			exp3a = z3.Bool("exp3a")
@@ -126,9 +125,7 @@ def generate_constraints(G, S, k, filename):
 					exp3a = z3.Bool(f"{x}_{n+2}")
 				else:
 					exp3a = z3.Or(exp3a,z3.Bool(f"{x}_{n+2}"))
-			#print(f"{i}_{n+1}",exp3a)
 			S.add(z3.Implies(z3.Bool(f"{i}_{n+1}"),exp3a))
-	#print(exp3)
 
 	''' DEST Constraints: 
 		at depth k, the edge must be
@@ -139,7 +136,6 @@ def generate_constraints(G, S, k, filename):
 		for i in G.in_edges(n):
 			dest_edges.add(G[i[0]][i[1]][0]["transition"])
 	dest_edges = list(dest_edges) # list of all destination edges
-	#print(dest_edges)
 	exp4 = z3.Bool("exp4")
 	exp4 = False
 	for i in dest_edges:
@@ -148,7 +144,6 @@ def generate_constraints(G, S, k, filename):
 		else:
 			exp4 = z3.Or(exp4,z3.Bool(f"{i}_{k}"))
 	S.add(exp4)
-	#print(exp4)
 
 	return S
 
@@ -175,12 +170,10 @@ def get_all_vars(graphs, files, S, k):
 			stutter.append(i)
 		else:
 			local.append(i)
-	#print(stutter, local)
 
 	dic ={}
 	for i in local:
 		dic[i] = 0
-	#print(dic)
 	shared = []
 	n = len(str(k))
 	for i in dic:
@@ -189,7 +182,6 @@ def get_all_vars(graphs, files, S, k):
 			for x in j.edges.data():
 				if x[2]['transition'] == name:
 					dic[i] = dic[i] + 1
-	#print(dic)
 	for i in dic:
 		if dic[i] > 1:
 			shared.append(i)
@@ -203,23 +195,19 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 	arr = []
 	for i in range(k):
 		n = len(str(i+1))
-		#arr.append([])
 		for j in stutter:
 			if j[len(j)-n:] == str(i+1):
 				arr.append(j[:len(j)-n-1])
-	#print(arr)
-
+	
 	stutter_dic = {}
 	for i in arr:
 		n = i.find("stutter")
-		#print(j[:n-1])
 		if i[:n-1] in stutter_dic:
 			if i not in stutter_dic[i[:n-1]]:
 				stutter_dic[i[:n-1]].append(i)
 		else:
 			stutter_dic[i[:n-1]] = []
-	#print(stutter_dic)
-
+	
 	shared_dic = {}
 	n = len(str(k))
 	for i in shared:
@@ -238,13 +226,10 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 				if l[2]['transition'] == j:
 					shared_dic[j].append(name)
 					break
-	#print(shared_dic)
-
 	local_dic = {}
 	for i in stutter_dic:
 		local_dic[i] = set()
-	#print(local_dic)
-
+	
 	for i in range(len(graphs)):
 		indices = []
 		for j, l in enumerate(files[i]):
@@ -254,21 +239,18 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 			name = files[i][indices[-1]+1:]
 		else:
 			name = files[i]
-		#print(name)
 		for j in local:
 			for l in graphs[i].edges.data():
 				if l[2]['transition'] in j:
 					#print(j)
 					local_dic[name].add(l[2]['transition'])
 					break
-	#print(local_dic)
-
+	
 	''' GLOBAL WAITING
 	all member automata are not allowed
 	to enable the stutter transition simultaneously
 	'''
 	glob = list(itertools.product(*stutter_dic.values()))
-	#print(all_combinations)
 	for i in range(k):
 		for j in glob:
 			exp1a = z3.Bool("exp1a")
@@ -279,7 +261,6 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 				else:
 					exp1a = z3.And(exp1a, z3.Bool(f"{x}_{i+1}"))
 			S.add(z3.Not(exp1a))
-			#print(exp1a)
 
 	''' REPEATED WAITING FOR SHARED LABELS
 	all member automata with this specific shared label are not allowed
@@ -289,12 +270,8 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 		for j in shared_dic:
 			exp2a = z3.Bool("exp2a")
 			exp2a = False
-			#print(f"{j}_{i}", end=" => NOT ")
-			#print(shared_dic[j])
 			for graph in shared_dic[j]:
-				#print(graph)
 				for x in stutter_dic[graph]:
-					#print(f"{x}_{i-1}", end=" & ")
 					if exp2a == False:
 						exp2a = z3.Not(z3.Bool(f"{x}_{i-1}"))
 					else:
@@ -307,7 +284,6 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 	'''
 	for i in local_dic:
 		for j in local_dic[i]:
-			#print(j)
 			for n in range(2, k):
 				exp3a = z3.Bool("exp3a")
 				exp3a = False
@@ -316,7 +292,6 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 						exp3a = z3.Bool(f"{l}_{n-1}")
 					else:
 						exp3a = z3.Or(exp3a, z3.Bool(f"{l}_{n-1}"))
-				#print(z3.Implies(z3.Bool(f"{j}_{n}"), z3.Not(exp3a)))
 				S.add(z3.Implies(z3.Bool(f"{j}_{n}"), z3.Not(exp3a)))
 
 	return S
@@ -327,9 +302,7 @@ def negation(S, model, paths):
 	trues = []
 	for d in model.decls():
 		if model[d] == True:
-			#print(d.name())
 			trues.append(d.name())
-	#print(trues)
 
 	P = {}
 	#print(i)
@@ -343,14 +316,12 @@ def negation(S, model, paths):
 	keys = list(P.keys())
 	keys.sort()
 	P = {i: P[i] for i in keys}
-	#print(P)
 	paths.append(P)
 
 	# Negating the model
 	exp = z3.Bool("exp")
 	exp = False
 	for i in trues:
-		#print(type(i))
 		if exp == False:
 			exp = z3.Bool(i)
 		else:
