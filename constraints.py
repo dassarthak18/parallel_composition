@@ -1,4 +1,5 @@
 import z3
+import re
 import itertools
 import networkx as nx
 import numpy as np
@@ -330,18 +331,9 @@ def negation(S, model, paths):
 	S.add(z3.Not(exp))
 	return S
 
-# Function to generate constraints for a given affine ODE
-def affine_ODE_constraints(S, t, a, b, x_0):
-	if a != 0:
-		e = np.exp(1)
-		S.add(z3.Real(f"x_{t}") == ((a*x_0 + b)*e**(a*t) - b)/a)
-	else:
-		S.add(z3.Real(f"x_{t}") == x_0 + b*t)
-	return S
-
-# Function to pretty print a retrieved path
-def print_path(graphs, files, p, k):
-	#print(p)
+# Function to retrieve the path from returned SAT model
+def retrieve_path(graphs, files, p, k):
+	aut_path = {}
 	for i in range(len(graphs)): # Iterate over every graph
 		filename = files[i]
 		G = graphs[i]
@@ -353,13 +345,192 @@ def print_path(graphs, files, p, k):
 			name = filename[indices[-1]+1:]
 		else:
 			name = filename
-		print(name+": ", end="")
+		aut_path[name] = []
 		for i in p:
 			for j in p[i]:
 				for x in G.edges.data():
 					if j == x[2]['transition']:
-						if i == k:
-							print(j)
-						else:
-							print(j, end=" -> ")
+						aut_path[name].append(j)
 						break
+	return aut_path
+
+# Function to extract coefficients from flow equation
+def extract_flow_coefficients(input_string):
+	cleaned_string = input_string.replace(' ', '')
+	parts = cleaned_string.split('=')
+	expression = parts[1]
+	matches = re.findall(r'[+-]?\s*\d+\.?\d*|[a-zA-Z]+', expression)
+	if len(matches) == 0:
+		a = 0
+		b = 0
+	if len(matches) == 1:
+		a = 0
+		b = matches[0]
+	if len(matches) == 2:
+		a = matches[0]
+		b = 0
+	if len(matches) == 3:
+		a = matches[0]
+		b = matches[2]
+	return str(a), str(b)
+
+# Function to check infeasibility of a retrieved path
+def check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth):
+	S = z3.Solver()
+	shared_dic = {}
+	n = len(str(depth))
+	for i in shared:
+		shared_dic[i[:-n-1]] = []
+	for i in range(len((graphs))):
+		indices = []
+		for j, l in enumerate(files[i]):
+			if l == "/":
+				indices.append(j)
+		if len(indices) > 0:
+			name = files[i][indices[-1]+1:]
+		else:
+			name = files[i]
+		for j in shared_dic:
+			for l in graphs[i].edges.data():
+				if l[2]['transition'] == j:
+					shared_dic[j].append(name)
+					break
+
+	'''INITIAL CONDITIONS AND
+	DWELLING IN FORBIDDEN LOCATION:
+	(Assuming that there is a single variable x.)
+	'''
+	config_file = open(config, 'r')
+	count = 0
+	for line in config_file.readlines():
+		if count == 0:
+			init = line.strip().split('&')
+		else:
+			forbidden = line.strip().split('&')
+		count = count+1
+	arr = []
+	for i in init:
+		if "x" not in i:
+			j = re.split('(\D)',i)
+			j1 = []
+			for k in j:
+				if k != "":
+					j1.append(k)
+			var = z3.Real(f"{j1[0]}")
+			exec(f"S.add(var{''.join(j1[1:])})")
+		else:
+			arr.append(i)
+	init = arr
+
+	for i in aut_path:
+		n = list(aut_path).index(i)
+		G = graphs[n]
+		path = []
+		for j in aut_path[i]:
+			if "stutter" not in j:
+				path.append(j)
+		for j in init:
+			x = z3.Real(f"{i}_x_0")
+			exec(f"S.add({''.join(j)})")
+		for j in forbidden:
+			if j!="true":
+				x = z3.Real(f"{i}_dx_{len(path)}")
+				exec(f"S.add({''.join(j)})")
+
+		''' LOCATION:
+		Must satisfy the flow.
+		Must satisfy the invariant.
+		(Assuming that there is a single variable x.)
+		'''
+		k = 0
+		for j in path:
+			for l in G.edges.data():
+				if l[2]['transition'] in j:
+					loc = l[0]
+					break
+			flow = automata[n][0][loc][0].split("&")
+			for f in flow:
+				a1, b1 = extract_flow_coefficients(f)
+				if not re.match(r"\d+\.*\d*", a1):
+					a = z3.Real(f"{a1}")
+				else:
+					a = float(a1)
+				if not re.match(r"\d+\.*\d*", b1):
+					b = z3.Real(f"{b1}")
+				else:
+					b = float(b1)
+				x = z3.Real(f"{i}_dx_{k}")
+				x_0 = z3.Real(f"{i}_x_{k}")
+				t = z3.Real(f"{i}_t_{k+1}")
+				S.add(t >= 0, t <= T)
+				if a != 0: # Affine ODE
+					e = np.exp(1)
+					S.add(x == ((a*x_0 + b)*e**(a*t) - b)/a)
+				else: # Linear ODE
+					S.add(x == x_0 + b*t)
+
+			invariant_1 = automata[n][0][loc][1].split("&")
+			invariant = []
+			for inv in invariant_1:
+				if inv != "true":
+					invariant.append(inv)
+			x = z3.Real(f"{i}_x_{k}")
+			for inv in invariant:
+				exec(f"S.add({''.join(inv)})")
+
+			k = k+1
+
+		''' TRANSITION:
+		Must satisfy the guard.
+		Must satisfy the assignment.
+		(Assuming that there is a single variable x.)
+		'''
+		k = 0
+		for j in path:
+			guard_1 = automata[n][1][j][0].split("&")
+			guard = []
+			for g in guard_1:
+				if g != "true":
+					guard.append(g)
+			x = z3.Real(f"{i}_dx_{k}")
+			for g in guard:
+				exec(f"S.add({''.join(g)})")
+
+			assignments = automata[n][1][j][1].split("&")
+			for asgn in assignments:
+				if asgn == "true":
+					assignment = z3.Real(f"{i}_dx_{k}")
+				else:
+					assignment = asgn.split("=")[1]
+				x = z3.Real(f"{i}_x_{k+1}")
+				S.add(x == assignment)
+
+			k = k+1
+
+		''' SYNCHRONIZATION:
+		Given depth $j$ where a transition is shared between components $G_1$ and $G_2$, we have
+		sum_{n=0}^{j-1}{t_n^{G_1}} = sum_{n=0}^{j-1}{t_n^{G_2}}
+		
+		k = 0
+		print(path)
+		for j in path:
+			str_arr = []
+			if j in shared_dic:
+				for x in shared_dic[j]:
+					string = ""
+					for y in range(1,k+2):
+						if y < k+1:
+							string = string + f"{x}_t_{y} + "
+						else:
+							string = string + f"{x}_t_{y}"
+					str_arr.append(string)
+			for a in str_arr:
+				for b in str_arr:
+					if a != b:
+						print(f"{a} == {b}")
+			k = k+1
+		'''
+		#print(path)
+	print(S)
+	#print(S.check())
+	return S
