@@ -45,7 +45,6 @@ for depth in range(1, n+1):
 		print(aut_path)
 		check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth)
 		count = count+1
-		break
 	total = total + count
 	S.reset()
 
