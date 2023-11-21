@@ -243,7 +243,6 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 		for j in local:
 			for l in graphs[i].edges.data():
 				if l[2]['transition'] in j:
-					#print(j)
 					local_dic[name].add(l[2]['transition'])
 					break
 	
@@ -306,7 +305,6 @@ def negation(S, model, paths):
 			trues.append(d.name())
 
 	P = {}
-	#print(i)
 	for j in trues:
 		x = j.split('_')
 		n = len(x[-1])
@@ -422,13 +420,18 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 			arr.append(i)
 	init = arr
 
+	stutter_free_path = {}
 	for i in aut_path:
-		n = list(aut_path).index(i)
-		G = graphs[n]
 		path = []
 		for j in aut_path[i]:
 			if "stutter" not in j:
 				path.append(j)
+		stutter_free_path[i] = path
+
+	for i in stutter_free_path:
+		path = stutter_free_path[i]
+		n = list(stutter_free_path).index(i)
+		G = graphs[n]
 		for j in init:
 			x = z3.Real(f"{i}_x_0")
 			exec(f"S.add({''.join(j)})")
@@ -436,6 +439,41 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 			if j!="true":
 				x = z3.Real(f"{i}_dx_{len(path)}")
 				exec(f"S.add({''.join(j)})")
+		for j in G.edges.data():
+			if (stutter_free_path == j[2]['transition']):
+				loc = j[1]
+				flow = automata[n][0][loc][0].split("&")
+				for f in flow:
+					a1, b1 = extract_flow_coefficients(f)
+					if not re.match(r"\d+\.*\d*", a1):
+						a = z3.Real(f"{a1}")
+					else:
+						a = float(a1)
+					if not re.match(r"\d+\.*\d*", b1):
+						b = z3.Real(f"{b1}")
+					else:
+						b = float(b1)
+					x = z3.Real(f"{i}_dx_{len(path)}")
+					x_0 = z3.Real(f"{i}_x_{len(path)}")
+					t = z3.Real(f"{i}_t_{len(path)+1}")
+					S.add(t >= 0, t <= T)
+					if a != 0: # Affine ODE
+						e = np.exp(1)
+						S.add(x == ((a*x_0 + b)*e**(a*t) - b)/a)
+					else: # Linear ODE
+						S.add(x == x_0 + b*t)
+				invariant_1 = automata[n][0][loc][1].split("&")
+				invariant = []
+				for inv in invariant_1:
+					if inv != "true":
+						invariant.append(inv)
+				x = z3.Real(f"{i}_x_{len(path)}")
+				for inv in invariant:
+					exec(f"S.add({''.join(inv)})")
+				x = z3.Real(f"{i}_dx_{len(path)}")
+				for inv in invariant:
+					exec(f"S.add({''.join(inv)})")
+				break
 
 		''' LOCATION:
 		Must satisfy the flow.
@@ -477,6 +515,9 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 			x = z3.Real(f"{i}_x_{k}")
 			for inv in invariant:
 				exec(f"S.add({''.join(inv)})")
+			x = z3.Real(f"{i}_dx_{k}")
+			for inv in invariant:
+				exec(f"S.add({''.join(inv)})")
 
 			k = k+1
 
@@ -507,30 +548,17 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 
 			k = k+1
 
-		''' SYNCHRONIZATION:
-		Given depth $j$ where a transition is shared between components $G_1$ and $G_2$, we have
-		sum_{n=0}^{j-1}{t_n^{G_1}} = sum_{n=0}^{j-1}{t_n^{G_2}}
-		
-		k = 0
-		print(path)
-		for j in path:
-			str_arr = []
-			if j in shared_dic:
-				for x in shared_dic[j]:
-					string = ""
-					for y in range(1,k+2):
-						if y < k+1:
-							string = string + f"{x}_t_{y} + "
-						else:
-							string = string + f"{x}_t_{y}"
-					str_arr.append(string)
-			for a in str_arr:
-				for b in str_arr:
-					if a != b:
-						print(f"{a} == {b}")
-			k = k+1
-		'''
-		#print(path)
-	print(S)
-	#print(S.check())
-	return S
+	''' SYNCHRONIZATION:
+		Given depth $j$ of $G_1$ where a transition is shared with components $G_2$ at depth $j'$,
+		we have $\sum_{n=0}^{j-1}{t_n^{G_1}} = \sum_{n=0}^{j'-1}{t_n^{G_2}}$
+	'''
+
+	if str(S.check()) == "sat":
+		print("The path is feasible.")
+		#m = S.model()
+		#for x in m.decls():
+		#	print(f"{x.name()} = {m[x]}")
+		return 0
+	else:
+		print("The path is infeasible.")
+	return 1
