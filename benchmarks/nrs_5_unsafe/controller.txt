@@ -1,0 +1,10 @@
+rod_0 rod_1 add_1
+rod_1 rod_0 remove_1
+rod_0 rod_2 add_2
+rod_2 rod_0 remove_2
+rod_0 rod_3 add_3
+rod_3 rod_0 remove_3
+rod_0 rod_4 add_4
+rod_4 rod_0 remove_4
+rod_0 rod_5 add_5
+rod_5 rod_0 remove_5

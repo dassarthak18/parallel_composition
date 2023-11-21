@@ -1,0 +1,3 @@
+out x'=c x<=10
+in x'=c x<=10000
+recover x'=c x<=10000

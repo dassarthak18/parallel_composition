@@ -1,0 +1,2 @@
+hit x>=5 x=0
+pass x>=5 x=0
