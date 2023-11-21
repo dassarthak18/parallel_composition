@@ -1,2 +1,0 @@
-a b hit
-b a pass
