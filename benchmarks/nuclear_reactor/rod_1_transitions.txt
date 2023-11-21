@@ -1,3 +1,0 @@
-add_1 x>=1 x==0
-remove_1 true x==0
-recovery_1 true true
