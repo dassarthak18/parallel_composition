@@ -376,7 +376,6 @@ def extract_flow_coefficients(input_string):
 # Function to check infeasibility of a retrieved path
 def check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth):
 	S = z3.Solver()
-	T1 = z3.Solver()
 	shared_dic = {}
 	n = len(str(depth))
 	for i in shared:
@@ -591,7 +590,7 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 							string += f"summ[{a1}][{b1}]+"
 					string_summ.append(string)
 				for a1 in range(len(string_summ)-1):
-					exec(f"T1.add({string_summ[a1]}=={string_summ[a1+1]})")
+					exec(f"S.add({string_summ[a1]}=={string_summ[a1+1]})")
 			for i in sync_trans_filtered:
 				for j in sync_trans_filtered[i]:
 					counters[j] += 1
@@ -604,9 +603,6 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 					temp_path.pop(i)
 			counters = temp_counters
 			path = temp_path
-
-	for asserts in T1.assertions():
-		S.add(asserts)
 
 	if str(S.check()) == "sat":
 		print("Unsafe. Found a counterexample.")
