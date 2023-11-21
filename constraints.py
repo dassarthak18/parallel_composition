@@ -194,15 +194,21 @@ def get_all_vars(graphs, files, S, k):
 
 	return stutter, shared, local
 
-# Function to generate constraints for path-pruning based optimization
-def pruning_constraints(graphs, files, S, stutter, shared, local, k):
-
+# Function to return all transition names from a list irrespective of depth
+def return_depth_free(trans, k):
 	arr = []
 	for i in range(k):
 		n = len(str(i+1))
-		for j in stutter:
+		for j in trans:
 			if j[len(j)-n:] == str(i+1):
 				arr.append(j[:len(j)-n-1])
+	transitions = list(set(arr))
+	return transitions
+
+# Function to generate constraints for path-pruning based optimization
+def pruning_constraints(graphs, files, S, stutter, shared, local, k):
+
+	arr = return_depth_free(stutter, k)
 	
 	stutter_dic = {}
 	for i in arr:
