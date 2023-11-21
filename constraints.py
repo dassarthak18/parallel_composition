@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
+from copy import deepcopy
 
 # Function to read graph from file and store as a networkx graph
 def read_graph(filename):
@@ -375,6 +376,7 @@ def extract_flow_coefficients(input_string):
 # Function to check infeasibility of a retrieved path
 def check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth):
 	S = z3.Solver()
+	T1 = z3.Solver()
 	shared_dic = {}
 	n = len(str(depth))
 	for i in shared:
@@ -548,17 +550,68 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 
 			k = k+1
 
-	''' SYNCHRONIZATION:
+		''' SYNCHRONIZATION:
 		Given depth $j$ of $G_1$ where a transition is shared with components $G_2$ at depth $j'$,
 		we have $\sum_{n=0}^{j-1}{t_n^{G_1}} = \sum_{n=0}^{j'-1}{t_n^{G_2}}$
-	'''
+		'''
+		path = deepcopy(stutter_free_path)
+		counters = {}
+		for i in path:
+			counters[i] = 0
+
+		while len(path) > 0:
+			trans = {}
+			for i in path:
+				trans[i] = path[i][counters[i]]
+			
+			sync_trans = {}
+			for key, value in trans.items():
+				if value in sync_trans:
+					sync_trans[value].append(key)
+				else:
+					sync_trans[value] = [key]
+			sync_trans_filtered = {key: value for key, value in sync_trans.items() if len(value) > 1}
+			
+			for i in sync_trans_filtered:
+				summ = []
+				for j in sync_trans_filtered[i]:
+					arr = []
+					for k in range(counters[j]+1):
+						t_var = z3.Real(f"{j}_t_{k+1}")
+						arr.append(t_var)
+					summ.append(arr)
+
+				string_summ = []
+				for a1 in range(len(summ)):
+					string = ""
+					for b1 in range(len(summ[a1])):
+						if b1 == len(summ[a1])-1:
+							string += f"summ[{a1}][{b1}]"
+						else:
+							string += f"summ[{a1}][{b1}]+"
+					string_summ.append(string)
+				for a1 in range(len(string_summ)-1):
+					exec(f"T1.add({string_summ[a1]}=={string_summ[a1+1]})")
+			for i in sync_trans_filtered:
+				for j in sync_trans_filtered[i]:
+					counters[j] += 1
+			
+			temp_counters = deepcopy(counters)
+			temp_path = deepcopy(path)
+			for i in path:
+				if counters[i] == len(path[i]):
+					temp_counters.pop(i)
+					temp_path.pop(i)
+			counters = temp_counters
+			path = temp_path
+
+	for asserts in T1.assertions():
+		S.add(asserts)
 
 	if str(S.check()) == "sat":
-		print("The path is feasible.")
+		print("Unsafe. Found a counterexample.")
 		#m = S.model()
 		#for x in m.decls():
 		#	print(f"{x.name()} = {m[x]}")
 		return 0
-	else:
-		print("The path is infeasible.")
 	return 1
