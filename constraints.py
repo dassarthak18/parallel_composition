@@ -94,6 +94,7 @@ def generate_constraints(G, S, k, filename):
 						exp2a = z3.Bool(f"{j}_{n+1}")
 					else:
 						exp2a = z3.Or(exp2a,z3.Bool(f"{j}_{n+1}"))
+				#print(exp2a)
 			S.add(z3.Implies(z3.Bool(f"{i}_{n+1}"),z3.Not(exp2a)))
 
 	''' NEXT Constraints: 
@@ -127,6 +128,7 @@ def generate_constraints(G, S, k, filename):
 					exp3a = z3.Bool(f"{x}_{n+2}")
 				else:
 					exp3a = z3.Or(exp3a,z3.Bool(f"{x}_{n+2}"))
+			#print(exp3a)
 			S.add(z3.Implies(z3.Bool(f"{i}_{n+1}"),exp3a))
 
 	''' DEST Constraints: 
@@ -145,6 +147,7 @@ def generate_constraints(G, S, k, filename):
 			exp4 = z3.Bool(f"{i}_{k}")
 		else:
 			exp4 = z3.Or(exp4,z3.Bool(f"{i}_{k}"))
+		#print(exp4)
 	S.add(exp4)
 
 	return S
@@ -373,6 +376,17 @@ def extract_flow_coefficients(input_string):
 		b = matches[2]
 	return str(a), str(b)
 
+# Function to get stutter-free path
+def stutter_free(aut_path):
+	stutter_free_path = {}
+	for i in aut_path:
+		path = []
+		for j in aut_path[i]:
+			if "stutter" not in j:
+				path.append(j)
+		stutter_free_path[i] = path
+	return stutter_free_path
+
 # Function to check infeasibility of a retrieved path
 def check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth):
 	S = z3.Solver()
@@ -421,13 +435,7 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 			arr.append(i)
 	init = arr
 
-	stutter_free_path = {}
-	for i in aut_path:
-		path = []
-		for j in aut_path[i]:
-			if "stutter" not in j:
-				path.append(j)
-		stutter_free_path[i] = path
+	stutter_free_path = stutter_free(aut_path)
 
 	for i in stutter_free_path:
 		path = stutter_free_path[i]

@@ -36,7 +36,7 @@ for depth in range(1, n+1):
 		S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
 
 	stutter, shared, local = get_all_vars(graphs, files, S, depth) # Get all variable names
-	#S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
+	S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
 
 	# Getting and printing the model for the run
 	paths = []
