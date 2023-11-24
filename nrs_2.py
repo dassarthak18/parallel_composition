@@ -1,5 +1,4 @@
 import z3
-import matplotlib.pyplot as plt
 import sys
 
 from constraints import *

@@ -1,5 +1,4 @@
 import z3
-import matplotlib.pyplot as plt
 import sys
 
 from constraints import *
@@ -12,8 +11,9 @@ config = "benchmarks/nrs_5_unsafe/config.txt"
 try:
 	n = int(sys.argv[1])
 	T = float(sys.argv[2])
+	del_t = float(sys.argv[3])
 except:
-  print("Please enter the depth of BMC and time horizon as command line arguments.")
+  print("Please enter the depth of BMC, time horizon and time step as command line arguments.")
   exit(0)
 
 graphs = []
@@ -26,7 +26,7 @@ for i in files:
 
 # Creating a single solver for the entire system
 total = 0 # total number of paths
-check = 1
+counterexample = []
 
 # Generating the constraints for a run of the SAT solver
 for depth in range(1, n+1):
@@ -48,15 +48,19 @@ for depth in range(1, n+1):
 		#print("Retrieved path:", aut_path)
 		#for i in aut_path:
 		#	print(f"{i}: {aut_path[i]}")
-		check = check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth)
+		counterexample = check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth)
 		count = count+1
-		if check == 0:
+		if counterexample != []:
 			break
 	total = total + count
-	if check == 0:
+	if counterexample != []:
 		break
 
-if check == 1:
+if counterexample == []:
     print("Safe.")
+else:
+	x = str(input("Enter the variable to plot CE against time. "))
+	stutter_free_path = stutter_free(aut_path)
+	plot_CE(graphs, automata, counterexample, x, del_t, stutter_free_path)
 
 print(f"Number of paths checked = {total}.")

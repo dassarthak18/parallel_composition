@@ -1,6 +1,4 @@
 import z3
-import matplotlib.pyplot as plt
-import sys
 import itertools
 
 from constraints import *

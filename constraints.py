@@ -4,7 +4,7 @@ import itertools
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-import sympy as sp
+import sys
 from copy import deepcopy
 
 # Function to read graph from file and store as a networkx graph
@@ -620,8 +620,68 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 
 	if str(S.check()) == "sat":
 		print("Unsafe. Found a counterexample.")
-		#m = S.model()
-		#for x in m.decls():
-		#	print(f"{x.name()} = {m[x]}")
-		return 0
-	return 1
+		return S.model()
+	return []
+
+def plot_CE(graphs, automata, m, x, del_t, stutter_free_path):
+	# Setting the parameters
+	arr = x.split('_')
+	var = arr[len(arr)-1]
+	arr.remove(var)
+	name = '_'.join(arr)
+
+	k = len(stutter_free_path[name])
+	var_name = f"{name}_{var}"
+	dvar_name = f"{name}_d{var}"
+	tvar_name = f"{name}_t"
+
+	# Retrieving the CE
+	x_arr = []
+	dx_arr = []
+	t_arr = [0]
+	for i in range(k):
+		xx = var_name + "_" + str(i)
+		dx = dvar_name + "_" + str(i)
+		t = tvar_name + "_" + str(i+1)
+		x_arr.append(float(m[z3.Real(xx)].as_decimal(sys.maxsize)))
+		dx_arr.append(float(m[z3.Real(dx)].as_decimal(sys.maxsize)))
+		t_val = float(m[z3.Real(t)].as_decimal(sys.maxsize))
+		t_arr.append(float(t_arr[len(t_arr)-1]+t_val))
+	xx = var_name + "_" + str(k)
+	x_arr.append(float(m[z3.Real(xx)].as_decimal(sys.maxsize)))
+
+	Y = []
+	X = []
+	for i in range(len(t_arr)):
+		if i > 0:
+			X.append(t_arr[i])
+			X.append(t_arr[i])
+			Y.append(dx_arr[i-1])
+			Y.append(x_arr[i])
+		else:
+			X.append(t_arr[i])
+			Y.append(x_arr[i])
+
+	# Plotting the CE outline
+	plt.plot(X, Y, 'ro', linestyle="--")
+	plt.show()
+
+	# Getting the flow for precise plotting
+	'''path = stutter_free_path[name]
+				n = list(stutter_free_path).index(name)
+				G = graphs[n]
+				for j in path:
+					for l in G.edges.data():
+						if l[2]['transition'] in j:
+							loc = l[0]
+							break
+					flow_arr = automata[n][0][loc][0].split("&")
+					for i in flow_arr:
+						if f"{var}'" in i:
+							flow = i
+							break
+					if 'c' in flow: # Assuming naming convention c for x'=ax+c such that c is a range
+						c = float(m[z3.Real("c")].as_decimal(sys.maxsize))
+					print(c)
+					flow.replace("c", str(c))
+					print(flow)'''

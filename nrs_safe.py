@@ -1,5 +1,4 @@
 import z3
-import matplotlib.pyplot as plt
 import sys
 
 from constraints import *
@@ -26,7 +25,7 @@ for i in files:
 
 # Creating a single solver for the entire system
 total = 0 # total number of paths
-check = 1
+counterexample = []
 
 # Generating the constraints for a run of the SAT solver
 for depth in range(1, n+1):
@@ -50,13 +49,13 @@ for depth in range(1, n+1):
 		#	print(f"{i}: {aut_path[i]}")
 		check = check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth)
 		count = count+1
-		if check == 0:
+		if counterexample != []:
 			break
 	total = total + count
-	if check == 0:
+	if counterexample != []:
 		break
 
-if check == 1:
+if counterexample == []:
     print("Safe.")
 
 print(f"Number of paths checked = {total}.")
