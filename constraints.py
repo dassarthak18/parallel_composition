@@ -663,25 +663,44 @@ def plot_CE(graphs, automata, m, x, del_t, stutter_free_path):
 			Y.append(x_arr[i])
 
 	# Plotting the CE outline
-	plt.plot(X, Y, 'ro', linestyle="--")
-	plt.show()
+	plt.plot(X, Y, linestyle="--") #TODO: Change the colour scheme
 
 	# Getting the flow for precise plotting
-	'''path = stutter_free_path[name]
-				n = list(stutter_free_path).index(name)
-				G = graphs[n]
-				for j in path:
-					for l in G.edges.data():
-						if l[2]['transition'] in j:
-							loc = l[0]
-							break
-					flow_arr = automata[n][0][loc][0].split("&")
-					for i in flow_arr:
-						if f"{var}'" in i:
-							flow = i
-							break
-					if 'c' in flow: # Assuming naming convention c for x'=ax+c such that c is a range
-						c = float(m[z3.Real("c")].as_decimal(sys.maxsize))
-					print(c)
-					flow.replace("c", str(c))
-					print(flow)'''
+	path = stutter_free_path[name]
+	n = list(stutter_free_path).index(name)
+	G = graphs[n]
+	flows = []
+	for j in path:
+		for l in G.edges.data():
+			if l[2]['transition'] in j:
+				loc = l[0]
+				break
+		flow_arr = automata[n][0][loc][0].split("&")
+		for i in flow_arr:
+			if f"{var}'" in i:
+				flow = i
+				break
+		if 'c' in flow: # Assuming naming convention c for x'=ax+c such that c is a range
+			c = float(m[z3.Real("c")].as_decimal(sys.maxsize))
+		flows.append(flow.replace("c", str(c)))
+	j = path[len(path)-1]
+	for l in G.edges.data():
+		if l[2]['transition'] in j:
+			forbidden = l[1]
+			break
+	flow_arr = automata[n][0][forbidden][0].split("&")
+	for i in flow_arr:
+		if f"{var}'" in i:
+			flow = i
+			break
+	if 'c' in flow:
+		c = float(m[z3.Real("c")].as_decimal(sys.maxsize))
+	flows.append(flow.replace("c", str(c)))
+	#print(flows)
+
+	# TODO: For each i, generate points (x,t) with bounds x in [x_i, dx_i] and t in [sum(t_(i+1)), sum(t_(i+2))]
+	# TODO: Plot these points without any marker
+	# TODO: Mark discrete transitions with a different colour and/or linestyle, label the transitions
+	# TODO: Mark the forbidden region with a box (if applicable) else mark the forbidden location with red colour
+
+	plt.show()
