@@ -11,11 +11,11 @@ config = "benchmarks/nrs_5_safe/config.txt"
 try:
 	n = int(sys.argv[1])
 	T = float(sys.argv[2])
-	var = str(sys.argv[[3]])
-	del_t = float(sys.argv[4])
+	var = str(sys.argv[3])
 except:
-  print("Please enter the depth of BMC, time horizon, variable for plotting and time step as command line arguments.")
-  exit(0)
+	print(sys.argv) # for debug
+	print("Please enter the depth of BMC, time horizon and variable for plotting as command line arguments.")
+	exit(0)
 
 graphs = []
 for i in files:

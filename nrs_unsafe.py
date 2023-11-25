@@ -12,10 +12,9 @@ try:
 	n = int(sys.argv[1])
 	T = float(sys.argv[2])
 	var = str(sys.argv[3])
-	del_t = float(sys.argv[4])
 except:
 	print(sys.argv) # for debug
-	print("Please enter the depth of BMC, time horizon, variable for plotting and time step as command line arguments.")
+	print("Please enter the depth of BMC, time horizon and variable for plotting as command line arguments.")
 	exit(0)
 
 graphs = []
@@ -62,6 +61,6 @@ if counterexample == []:
     print("Safe.")
 else:
 	stutter_free_path = stutter_free(aut_path)
-	plot_CE(graphs, automata, counterexample, var, del_t, stutter_free_path)
+	plot_CE(graphs, automata, counterexample, var, stutter_free_path)
 
 print(f"Number of paths checked = {total}.")

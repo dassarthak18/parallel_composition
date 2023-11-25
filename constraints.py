@@ -623,7 +623,18 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 		return S.model()
 	return []
 
-def plot_CE(graphs, automata, m, x, del_t, stutter_free_path):
+def compute_flow(flow, x_0, t):
+	a1, b1 = extract_flow_coefficients(flow)
+	a = float(a1)
+	b = float(b1)
+	if a != 0: # Affine ODE
+		e = np.exp(1)
+		val = ((a*x_0 + b)*e**(a*t) - b)/a
+	else: # Linear ODE
+		val = x_0 + b*t
+	return val
+
+def plot_CE(graphs, automata, m, x, stutter_free_path):
 	# Setting the parameters
 	arr = x.split('_')
 	var = arr[len(arr)-1]
@@ -649,21 +660,6 @@ def plot_CE(graphs, automata, m, x, del_t, stutter_free_path):
 		t_arr.append(float(t_arr[len(t_arr)-1]+t_val))
 	xx = var_name + "_" + str(k)
 	x_arr.append(float(m[z3.Real(xx)].as_decimal(sys.maxsize)))
-
-	Y = []
-	X = []
-	for i in range(len(t_arr)):
-		if i > 0:
-			X.append(t_arr[i])
-			X.append(t_arr[i])
-			Y.append(dx_arr[i-1])
-			Y.append(x_arr[i])
-		else:
-			X.append(t_arr[i])
-			Y.append(x_arr[i])
-
-	# Plotting the CE outline
-	plt.plot(X, Y, linestyle="--") #TODO: Change the colour scheme
 
 	# Getting the flow for precise plotting
 	path = stutter_free_path[name]
@@ -696,11 +692,30 @@ def plot_CE(graphs, automata, m, x, del_t, stutter_free_path):
 	if 'c' in flow:
 		c = float(m[z3.Real("c")].as_decimal(sys.maxsize))
 	flows.append(flow.replace("c", str(c)))
-	#print(flows)
 
-	# TODO: For each i, generate points (x,t) with bounds x in [x_i, dx_i] and t in [sum(t_(i+1)), sum(t_(i+2))]
-	# TODO: Plot these points without any marker
+	# Generate flow points
+	for i in range(len(t_arr)-1):
+		X_arr = [x_arr[i]]
+		T_arr = [t_arr[i]]
+		dx = x_arr[i]
+		dt = t_arr[i]
+		del_t = float((t_arr[i+1] - t_arr[i])/100)
+
+		for _ in range(100):
+			dt = dt + del_t
+			dx = compute_flow(flows[i], x_arr[i], dt - t_arr[i])
+			X_arr.append(dx)
+			T_arr.append(dt)
+
+		X_arr.append(dx_arr[i])
+		T_arr.append(t_arr[i+1])
+		plt.plot(T_arr, X_arr, color='blue', linestyle='-')
+		plt.plot(T_arr[0], X_arr[0], color='blue', marker='.')
+		plt.plot(T_arr[len(T_arr)-1], X_arr[len(T_arr)-1], color='blue', marker='.')
+		plt.plot([t_arr[i+1],t_arr[i+1]], [dx_arr[i], x_arr[i+1]], color='blue', linestyle='--')
+
 	# TODO: Mark discrete transitions with a different colour and/or linestyle, label the transitions
 	# TODO: Mark the forbidden region with a box (if applicable) else mark the forbidden location with red colour
 
+	# Plotting the CE outline
 	plt.show()
