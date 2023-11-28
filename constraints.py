@@ -634,7 +634,7 @@ def compute_flow(flow, x_0, t):
 		val = x_0 + b*t
 	return val
 
-def plot_CE(graphs, automata, m, x, stutter_free_path):
+def plot_CE(graphs, automata, m, x, config, stutter_free_path):
 	# Setting the parameters
 	arr = x.split('_')
 	var = arr[len(arr)-1]
@@ -714,7 +714,21 @@ def plot_CE(graphs, automata, m, x, stutter_free_path):
 		plt.plot(T_arr[len(T_arr)-1], X_arr[len(T_arr)-1], color='blue', marker='.')
 		plt.plot([t_arr[i+1],t_arr[i+1]], [dx_arr[i], x_arr[i+1]], color='blue', linestyle='--')
 
-	# TODO: Mark discrete transitions with a different colour and/or linestyle, label the transitions
+	# Mark the forbidden location with red colour
+	config_file = open(config, 'r')
+	count = 0
+	for line in config_file.readlines():
+		if count == 0:
+			init = line.strip().split('&')
+		else:
+			forbidden = line.strip().split('&')
+		count = count+1
+	if forbidden == ["true"]:
+		plt.plot([t_arr[len(t_arr)-1]], [x_arr[len(x_arr)-1]], 'ro')
+	# TODO: Else mark the forbidden region with red colour
+
+	# Plotting the CE outline
+	plt.show()
 	# TODO: Mark the forbidden region with a box (if applicable) else mark the forbidden location with red colour
 
 	# Plotting the CE outline
