@@ -49,7 +49,7 @@ for depth in range(1, n+1):
 		#print("Retrieved path:", aut_path)
 		#for i in aut_path:
 		#	print(f"{i}: {aut_path[i]}")
-		counterexample = check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth)
+		counterexample = check_feasibility(aut_path, graphs, automata, files, config, T, shared, ["x"], depth)
 		count = count+1
 		if counterexample != []:
 			break
