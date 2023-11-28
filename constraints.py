@@ -394,7 +394,7 @@ def stutter_free(aut_path):
 	return stutter_free_path
 
 # Function to check infeasibility of a retrieved path
-def check_feasibility(aut_path, graphs, automata, files, config, T, shared, depth):
+def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_names, depth):
 	S = z3.Solver()
 	shared_dic = {}
 	n = len(str(depth))
@@ -417,7 +417,6 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 
 	'''INITIAL CONDITIONS AND
 	DWELLING IN FORBIDDEN LOCATION:
-	(Assuming that there is a single variable x.)
 	'''
 	config_file = open(config, 'r')
 	count = 0
@@ -429,7 +428,7 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 		count = count+1
 	arr = []
 	for i in init:
-		if "x" not in i:
+		if not any(var in i for var in var_names):
 			j = re.split('(\D)',i)
 			j1 = []
 			for k in j:
@@ -448,11 +447,15 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 		n = list(stutter_free_path).index(i)
 		G = graphs[n]
 		for j in init:
-			x = z3.Real(f"{i}_x_0")
+			matching_element = [var for var in var_names if var in j]
+			x = z3.Real(f'{i}_{matching_element[0]}_0')
+			j = j.replace(matching_element[0], "x")
 			exec(f"S.add({''.join(j)})")
 		for j in forbidden:
 			if j!="true":
-				x = z3.Real(f"{i}_dx_{len(path)}")
+				matching_element = [var for var in var_names if var in j]
+				x = z3.Real(f'{i}_d{matching_element[0]}_{len(path)}')
+				j = j.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(j)})")
 		for j in G.edges.data():
 			if (stutter_free_path == j[2]['transition']):
@@ -468,8 +471,9 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 						b = z3.Real(f"{b1}")
 					else:
 						b = float(b1)
-					x = z3.Real(f"{i}_dx_{len(path)}")
-					x_0 = z3.Real(f"{i}_x_{len(path)}")
+					matching_element = [var for var in var_names if var in f]
+					x = z3.Real(f"{i}_d{matching_element[0]}_{len(path)}")
+					x_0 = z3.Real(f"{i}_{matching_element[0]}_{len(path)}")
 					t = z3.Real(f"{i}_t_{len(path)+1}")
 					S.add(t >= 0, t <= T)
 					if a != 0: # Affine ODE
@@ -482,18 +486,21 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 				for inv in invariant_1:
 					if inv != "true":
 						invariant.append(inv)
-				x = z3.Real(f"{i}_x_{len(path)}")
 				for inv in invariant:
+					matching_element = [var for var in var_names if var in inv]
+					x = z3.Real(f"{i}_{matching_element[0]}_{len(path)}")
+					inv = inv.replace(matching_element[0], "x")
 					exec(f"S.add({''.join(inv)})")
-				x = z3.Real(f"{i}_dx_{len(path)}")
 				for inv in invariant:
+					matching_element = [var for var in var_names if var in inv]
+					x = z3.Real(f"{i}_d{matching_element[0]}_{len(path)}")
+					inv = inv.replace(matching_element[0], "x")
 					exec(f"S.add({''.join(inv)})")
 				break
 
 		''' LOCATION:
 		Must satisfy the flow.
 		Must satisfy the invariant.
-		(Assuming that there is a single variable x.)
 		'''
 		k = 0
 		for j in path:
@@ -512,8 +519,9 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 					b = z3.Real(f"{b1}")
 				else:
 					b = float(b1)
-				x = z3.Real(f"{i}_dx_{k}")
-				x_0 = z3.Real(f"{i}_x_{k}")
+				matching_element = [var for var in var_names if var in f]
+				x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
+				x_0 = z3.Real(f"{i}_{matching_element[0]}_{k}")
 				t = z3.Real(f"{i}_t_{k+1}")
 				S.add(t >= 0, t <= T)
 				if a != 0: # Affine ODE
@@ -527,11 +535,16 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 			for inv in invariant_1:
 				if inv != "true":
 					invariant.append(inv)
-			x = z3.Real(f"{i}_x_{k}")
 			for inv in invariant:
+				matching_element = [var for var in var_names if var in inv]
+				x = z3.Real(f"{i}_{matching_element[0]}_{k}")
+				inv = inv.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(inv)})")
 			x = z3.Real(f"{i}_dx_{k}")
 			for inv in invariant:
+				matching_element = [var for var in var_names if var in inv]
+				x = z3.Real(f"{i}_{matching_element[0]}_{k}")
+				inv = inv.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(inv)})")
 
 			k = k+1
@@ -539,7 +552,6 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 		''' TRANSITION:
 		Must satisfy the guard.
 		Must satisfy the assignment.
-		(Assuming that there is a single variable x.)
 		'''
 		k = 0
 		for j in path:
@@ -548,18 +560,24 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, dept
 			for g in guard_1:
 				if g != "true":
 					guard.append(g)
-			x = z3.Real(f"{i}_dx_{k}")
 			for g in guard:
+				matching_element = [var for var in var_names if var in g]
+				x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
+				inv = inv.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(g)})")
 
 			assignments = automata[n][1][j][1].split("&")
 			for asgn in assignments:
 				if asgn == "true":
-					assignment = z3.Real(f"{i}_dx_{k}")
+					for v in vars:
+						assignment = z3.Real(f"{i}_d{v}_{k}")
+						x = z3.Real(f"{i}_{v}_{k+1}")
+						S.add(x == assignment)
 				else:
-					assignment = asgn.split("=")[1]
-				x = z3.Real(f"{i}_x_{k+1}")
-				S.add(x == assignment)
+					arr = asgn.split("=")
+					assignment = arr[1]
+					x = z3.Real(f"{i}_{arr[0]}_{k+1}")
+					S.add(x == assignment)
 
 			k = k+1
 
