@@ -1,0 +1,8 @@
+s1 s2 rt_2_3
+s2 s3 tau_2
+s2 s4 rt_3_4
+s3 s4 rt_3_4
+s4 s5 tt_2
+s5 s6 tau_2
+s5 s1 rt_3_4
+s6 s1 rt_3_4

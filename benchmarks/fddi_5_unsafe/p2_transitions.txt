@@ -1,0 +1,8 @@
+rt_1_2 true x=0
+tt_1 true x=0&z=0
+tau_1 x==20&y<620 true
+tau_1 x==20&z<620 true
+rt_2_3 x==20&y>=620 true
+rt_2_3 x==20&z>=620 true
+rt_2_3 y<=620 x=0
+rt_2_3 z<=620 true
