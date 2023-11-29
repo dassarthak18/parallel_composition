@@ -563,13 +563,13 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 			for g in guard:
 				matching_element = [var for var in var_names if var in g]
 				x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
-				inv = inv.replace(matching_element[0], "x")
+				g = g.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(g)})")
 
 			assignments = automata[n][1][j][1].split("&")
 			for asgn in assignments:
 				if asgn == "true":
-					for v in vars:
+					for v in var_names:
 						assignment = z3.Real(f"{i}_d{v}_{k}")
 						x = z3.Real(f"{i}_{v}_{k+1}")
 						S.add(x == assignment)
