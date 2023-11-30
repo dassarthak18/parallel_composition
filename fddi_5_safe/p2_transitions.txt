@@ -1,8 +1,0 @@
-rt_0 x<2 x=0
-tt true x=0&z=0
-tau x==20&y<620 true
-tau x==20&z<620 true
-rt_1 x==20&y>=620 true
-rt_1 x==20&z>=620 true
-rt_1 y<=620 x=0
-rt_1 z<=620 true
