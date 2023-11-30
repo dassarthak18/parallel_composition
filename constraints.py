@@ -567,17 +567,25 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 				exec(f"S.add({''.join(g)})")
 
 			assignments = automata[n][1][j][1].split("&")
+			marked = []
 			for asgn in assignments:
 				if asgn == "true":
 					for v in var_names:
 						assignment = z3.Real(f"{i}_d{v}_{k}")
 						x = z3.Real(f"{i}_{v}_{k+1}")
 						S.add(x == assignment)
+						marked.append(v)
 				else:
 					arr = asgn.split("=")
 					assignment = arr[1]
 					x = z3.Real(f"{i}_{arr[0]}_{k+1}")
 					S.add(x == assignment)
+					marked.append(arr[0])
+			if len(marked) < len(var_names):
+				for a in var_names:
+					if not a in marked:
+						assignment = z3.Real(f"{i}_d{a}_{k}")
+						x = z3.Real(f"{i}_{a}_{k+1}")
 
 			k = k+1
 
