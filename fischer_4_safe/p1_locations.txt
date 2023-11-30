@@ -1,8 +1,0 @@
-loc1 x'=c&svl'=0&svr'=0 true
-loc2 x'=c&svl'=0&svr'=0 x<=1
-loc3 x'=c&svl'=0&svr'=0 true
-loc4 x'=c&svl'=0&svr'=0 true
-loc5 x'=c&svl'=0&svr'=0 true
-loc6 x'=c&svl'=0&svr'=0 x<=1
-loc7 x'=c&svl'=0&svr'=0 true
-loc8 x'=c&svl'=0&svr'=0 true
