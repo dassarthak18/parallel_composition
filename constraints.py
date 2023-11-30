@@ -644,6 +644,10 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 			counters = temp_counters
 			path = temp_path
 
+	#f = open("fddi_smt2.txt", "a")
+	#f.write(S.to_smt2())
+	#f.close()
+
 	if str(S.check()) == "sat":
 		print("Unsafe. Found a counterexample.")
 		return S.model()
@@ -702,6 +706,7 @@ def plot_CE(graphs, automata, m, x, config, stutter_free_path):
 			if f"{var}'" in i:
 				flow = i
 				break
+		c = "na"
 		if 'c' in flow: # Assuming naming convention c for x'=ax+c such that c is a range
 			c = float(m[z3.Real("c")].as_decimal(sys.maxsize))
 		flows.append(flow.replace("c", str(c)))
@@ -715,6 +720,7 @@ def plot_CE(graphs, automata, m, x, config, stutter_free_path):
 		if f"{var}'" in i:
 			flow = i
 			break
+	c = "na"
 	if 'c' in flow:
 		c = float(m[z3.Real("c")].as_decimal(sys.maxsize))
 	flows.append(flow.replace("c", str(c)))

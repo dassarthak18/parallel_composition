@@ -61,6 +61,8 @@ if counterexample == []:
     print("Safe.")
 else:
 	stutter_free_path = stutter_free(aut_path)
+	#for d in counterexample.decls():
+	#	print(f"{d.name()} = {counterexample[d]}")
 	plot_CE(graphs, automata, counterexample, var, config, stutter_free_path)
 
 print(f"Number of paths checked = {total}.")
