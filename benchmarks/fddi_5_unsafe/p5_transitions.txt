@@ -1,8 +1,8 @@
-rt_4_5 true x=0
-tt_5 true x=0&z=0
-tau_5 x==20&y<620 true
-tau_5 x==20&z<620 true
-rt_5_5 x==20&y>=620 true
-rt_5_5 x==20&z>=620 true
-rt_5_5 y<=620 x=0
-rt_5_5 z<=620 true
+rt_0 true x=0
+tt true x=0&z=0
+tau x==20&y<620 true
+tau x==20&z<620 true
+rt_1 x==20&y>=620 true
+rt_1 x==20&z>=620 true
+rt_1 y<=620 x=0
+rt_1 z<=620 true
