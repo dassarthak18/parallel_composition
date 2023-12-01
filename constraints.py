@@ -585,7 +585,7 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 					if not a in marked:
 						assignment = z3.Real(f"{i}_d{a}_{k}")
 						x = z3.Real(f"{i}_{a}_{k+1}")
-
+						S.add(x == assignment)
 			k = k+1
 
 		''' SYNCHRONIZATION:
