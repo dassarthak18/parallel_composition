@@ -493,7 +493,6 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 					exec(f"S.add({''.join(inv)})")
 				for inv in invariant:
 					matching_element = [var for var in var_names if var in inv]
-					
 					x = z3.Real(f"{i}_d{matching_element[0]}_{len(path)}")
 					inv = inv.replace(matching_element[0], "x")
 					exec(f"S.add({''.join(inv)})")
@@ -541,10 +540,9 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 				x = z3.Real(f"{i}_{matching_element[0]}_{k}")
 				inv = inv.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(inv)})")
-			x = z3.Real(f"{i}_dx_{k}")
 			for inv in invariant:
 				matching_element = [var for var in var_names if var in inv]
-				x = z3.Real(f"{i}_{matching_element[0]}_{k}")
+				x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
 				inv = inv.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(inv)})")
 
