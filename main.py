@@ -13,14 +13,17 @@ try:
 	if "fddi_5" in string: 
 		files = [f"benchmarks/{string}/p1",f"benchmarks/{string}/p2",f"benchmarks/{string}/p3",
 		f"benchmarks/{string}/p4",f"benchmarks/{string}/p5"]
-		var_names = ["x","y","z"]
-	elif "fischer_4" in string:
+		global_vars = {}
+		local_vars = ["x","y","z"]
+	if "fischer_4" in string:
 		files = [f"benchmarks/{string}/p1",f"benchmarks/{string}/p2",f"benchmarks/{string}/p3",f"benchmarks/{string}/p4"]
-		var_names = ["x", "svl", "svr"]
+		global_vars = {"sv0":["p4","p1"], "sv1":["p1","p2"], "sv2":["p2","p3"], "sv3":["p3","p4"]}
+		local_vars = ["x"]
 	elif "nrs" in string:
 		files = [f"benchmarks/{string}/rod_1",f"benchmarks/{string}/rod_2",f"benchmarks/{string}/rod_3",
 		f"benchmarks/{string}/rod_4",f"benchmarks/{string}/rod_5",f"benchmarks/{string}/controller"]
-		var_names = ["x"]
+		global_vars = {}
+		local_vars = ["x"]
 except:
 	print(sys.argv) # for debug
 	print("Please enter the name of the benchmark, depth of BMC, time horizon and variable for plotting as command line arguments.")
@@ -46,7 +49,7 @@ for depth in range(1, n+1):
 		S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
 
 	stutter, shared, local = get_all_vars(graphs, files, S, depth) # Get all variable names
-	#S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
+	S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
 
 	# Getting and printing the model for the run
 	paths = []
@@ -58,7 +61,7 @@ for depth in range(1, n+1):
 		print("Retrieved path:", aut_path)
 		#for i in aut_path:
 		#	print(f"{i}: {aut_path[i]}")
-		counterexample = check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_names, depth)
+		counterexample = check_feasibility(aut_path, graphs, automata, files, config, T, shared, global_vars, local_vars, depth)
 		count = count+1
 		if counterexample != []:
 			break

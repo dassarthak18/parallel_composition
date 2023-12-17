@@ -394,7 +394,7 @@ def stutter_free(aut_path):
 	return stutter_free_path
 
 # Function to check infeasibility of a retrieved path
-def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_names, depth):
+def check_feasibility(aut_path, graphs, automata, files, config, T, shared, global_vars, local_vars, depth):
 	S = z3.Solver()
 	shared_dic = {}
 	n = len(str(depth))
@@ -414,6 +414,8 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 				if l[2]['transition'] == j:
 					shared_dic[j].append(name)
 					break
+
+	var_names = list(global_vars.keys()) + local_vars
 
 	'''INITIAL CONDITIONS AND
 	DWELLING IN FORBIDDEN LOCATION:
@@ -643,6 +645,29 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, var_
 			counters = temp_counters
 			path = temp_path
 
+	''' SHARED VARIABLES:
+	For shared variables, the values are equal at every timestep.
+	'''
+	smt_vars = set()
+	for expr in S.assertions():
+		get_vars(expr, smt_vars)
+	nm = list(stutter_free_path.keys())[0]
+	temp = []
+	for i in smt_vars:
+		if nm in i and "_t_" in i:
+			temp.append(i)
+	no_of_steps = len(temp)
+
+	for n in range(no_of_steps+1):
+		for i in global_vars:
+			for j in range(len(global_vars[i])-1):
+				a = z3.Bool(f"{global_vars[i][j]}_{i}_{n}")
+				b = z3.Bool(f"{global_vars[i][j+1]}_{i}_{n}")
+				S.add(a == b)
+				a = z3.Bool(f"{global_vars[i][j]}_d{i}_{n}")
+				b = z3.Bool(f"{global_vars[i][j+1]}_d{i}_{n}")
+				S.add(a == b)
+				
 	if str(S.check()) == "sat":
 		print("Unsafe. Found a counterexample.")
 		return S.model()
