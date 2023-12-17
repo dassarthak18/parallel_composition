@@ -1,0 +1,10 @@
+testl0 sv1==0 x=0
+setli true x=0&sv1=2
+testli x>2&sv1==2 x=0
+t true x=0
+testr0 sv2==0 x=0
+setri true x=0
+testri x>2&sv2==2 x=0
+set0 true x=0
+testrni x>2&sv2!=2 x=0
+testlni x>2&sv1!=2 x=0
