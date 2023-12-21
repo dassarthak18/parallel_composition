@@ -1,0 +1,5 @@
+s1 x'=1&y'=1&z'=1 true
+s2 x'=1&y'=1&z'=1 true
+s3 x'=1&y'=1&z'=1 true
+s4 x'=1&y'=1&z'=1 true
+s5 x'=1&y'=1&z'=1 true
