@@ -1,0 +1,5 @@
+e3wr3 true x0=0
+e3eq3 x0>=2.1 true
+e3wr0 true true
+e3eq0 true x0=0
+e3ne3 x0>=2.1 true

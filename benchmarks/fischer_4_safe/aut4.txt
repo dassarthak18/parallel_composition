@@ -1,0 +1,5 @@
+set test e4wr4
+test cs e4eq4
+cs idle e4wr0
+idle set e4eq0
+test idle e4ne4
