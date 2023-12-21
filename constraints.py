@@ -415,7 +415,7 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 					shared_dic[j].append(name)
 					break
 
-	var_names = list(global_vars.keys()) + local_vars
+	var_names = global_vars + local_vars
 
 	'''INITIAL CONDITIONS AND
 	DWELLING IN FORBIDDEN LOCATION:
@@ -450,13 +450,19 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 		G = graphs[n]
 		for j in init:
 			matching_element = [var for var in var_names if var in j]
-			x = z3.Real(f'{i}_{matching_element[0]}_0')
+			if matching_element[0] in local_vars:
+				x = z3.Real(f'{i}_{matching_element[0]}_0')
+			else:
+				x = z3.Real(f'{matching_element[0]}_0')
 			j = j.replace(matching_element[0], "x")
 			exec(f"S.add({''.join(j)})")
 		for j in forbidden:
 			if j!="true":
 				matching_element = [var for var in var_names if var in j]
-				x = z3.Real(f'{i}_d{matching_element[0]}_{len(path)}')
+				if matching_element[0] in local_vars:
+					x = z3.Real(f'{i}_d{matching_element[0]}_{len(path)}')
+				else:
+					x = z3.Real(f'd{matching_element[0]}_{len(path)}')
 				j = j.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(j)})")
 		for j in G.edges.data():
@@ -474,8 +480,12 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 					else:
 						b = float(b1)
 					matching_element = [var for var in var_names if var in f]
-					x = z3.Real(f"{i}_d{matching_element[0]}_{len(path)}")
-					x_0 = z3.Real(f"{i}_{matching_element[0]}_{len(path)}")
+					if matching_element[0] in local_vars:
+						x = z3.Real(f"{i}_d{matching_element[0]}_{len(path)}")
+						x_0 = z3.Real(f"{i}_{matching_element[0]}_{len(path)}")
+					else:
+						x = z3.Real(f"d{matching_element[0]}_{len(path)}")
+						x_0 = z3.Real(f"{matching_element[0]}_{len(path)}")
 					t = z3.Real(f"{i}_t_{len(path)+1}")
 					S.add(t >= 0, t <= T)
 					if a != 0: # Affine ODE
@@ -490,12 +500,18 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 						invariant.append(inv)
 				for inv in invariant:
 					matching_element = [var for var in var_names if var in inv]
-					x = z3.Real(f"{i}_{matching_element[0]}_{len(path)}")
+					if matching_element[0] in local_vars:
+						x = z3.Real(f"{i}_{matching_element[0]}_{len(path)}")
+					else:
+						x = z3.Real(f"{matching_element[0]}_{len(path)}")
 					inv = inv.replace(matching_element[0], "x")
 					exec(f"S.add({''.join(inv)})")
 				for inv in invariant:
 					matching_element = [var for var in var_names if var in inv]
-					x = z3.Real(f"{i}_d{matching_element[0]}_{len(path)}")
+					if matching_element[0] in local_vars:
+						x = z3.Real(f"{i}_d{matching_element[0]}_{len(path)}")
+					else:
+						x = z3.Real(f"d{matching_element[0]}_{len(path)}")
 					inv = inv.replace(matching_element[0], "x")
 					exec(f"S.add({''.join(inv)})")
 				break
@@ -522,8 +538,12 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 				else:
 					b = float(b1)
 				matching_element = [var for var in var_names if var in f]
-				x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
-				x_0 = z3.Real(f"{i}_{matching_element[0]}_{k}")
+				if matching_element[0] in local_vars:
+					x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
+					x_0 = z3.Real(f"{i}_{matching_element[0]}_{k}")
+				else:
+					x = z3.Real(f"d{matching_element[0]}_{k}")
+					x_0 = z3.Real(f"{matching_element[0]}_{k}")
 				t = z3.Real(f"{i}_t_{k+1}")
 				S.add(t >= 0, t <= T)
 				if a != 0: # Affine ODE
@@ -539,12 +559,18 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 					invariant.append(inv)
 			for inv in invariant:
 				matching_element = [var for var in var_names if var in inv]
-				x = z3.Real(f"{i}_{matching_element[0]}_{k}")
+				if matching_element[0] in local_vars:
+					x = z3.Real(f"{i}_{matching_element[0]}_{k}")
+				else:
+					x = z3.Real(f"{matching_element[0]}_{k}")
 				inv = inv.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(inv)})")
 			for inv in invariant:
 				matching_element = [var for var in var_names if var in inv]
-				x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
+				if matching_element[0] in local_vars:
+					x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
+				else:
+					x = z3.Real(f"d{matching_element[0]}_{k}")
 				inv = inv.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(inv)})")
 
@@ -563,7 +589,10 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 					guard.append(g)
 			for g in guard:
 				matching_element = [var for var in var_names if var in g]
-				x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
+				if matching_element[0] in local_vars:
+					x = z3.Real(f"{i}_d{matching_element[0]}_{k}")
+				else:
+					x = z3.Real(f"d{matching_element[0]}_{k}")
 				g = g.replace(matching_element[0], "x")
 				exec(f"S.add({''.join(g)})")
 
@@ -572,22 +601,41 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 			for asgn in assignments:
 				if asgn == "true":
 					for v in var_names:
-						assignment = z3.Real(f"{i}_d{v}_{k}")
-						x = z3.Real(f"{i}_{v}_{k+1}")
-						S.add(x == assignment)
+						if a in local_vars:
+							assignment = z3.Real(f"{i}_d{v}_{k}")
+							x = z3.Real(f"{i}_{v}_{k+1}")
+							S.add(x == assignment)
+						else:
+							assignment = z3.Real(f"d{v}_{k}")
+							x = z3.Real(f"{v}_{k+1}")
+							S.add(x == assignment)
+							#print(S.assertions()[-1])
 						marked.append(v)
 				else:
 					arr = asgn.split("=")
 					assignment = arr[1]
-					x = z3.Real(f"{i}_{arr[0]}_{k+1}")
-					S.add(x == assignment)
+					if arr[0] in local_vars:
+						x = z3.Real(f"{i}_{arr[0]}_{k+1}")
+						S.add(x == assignment)
+					else:
+						x = z3.Real(f"{arr[0]}_{k+1}")
+						S.add(x == assignment)
+						#print(S.assertions()[-1])
 					marked.append(arr[0])
 			if len(marked) < len(var_names):
 				for a in var_names:
-					if not a in marked:
-						assignment = z3.Real(f"{i}_d{a}_{k}")
-						x = z3.Real(f"{i}_{a}_{k+1}")
-						S.add(x == assignment)
+					''
+					if a in local_vars:
+						if not a in marked:
+							assignment = z3.Real(f"{i}_d{a}_{k}")
+							x = z3.Real(f"{i}_{a}_{k+1}")
+							S.add(x == assignment)
+					else:
+						if not a in marked:
+							assignment = z3.Real(f"d{a}_{k}")
+							x = z3.Real(f"{a}_{k+1}")
+							S.add(x == assignment)
+							#print(S.assertions()[-1])
 			k = k+1
 
 		''' SYNCHRONIZATION:
@@ -657,16 +705,6 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 		if nm in i and "_t_" in i:
 			temp.append(i)
 	no_of_steps = len(temp)
-
-	for n in range(no_of_steps+1):
-		for i in global_vars:
-			for j in range(len(global_vars[i])-1):
-				a = z3.Bool(f"{global_vars[i][j]}_{i}_{n}")
-				b = z3.Bool(f"{global_vars[i][j+1]}_{i}_{n}")
-				S.add(a == b)
-				a = z3.Bool(f"{global_vars[i][j]}_d{i}_{n}")
-				b = z3.Bool(f"{global_vars[i][j+1]}_d{i}_{n}")
-				S.add(a == b)
 				
 	if str(S.check()) == "sat":
 		print("Unsafe. Found a counterexample.")
@@ -690,7 +728,6 @@ def plot_CE(graphs, automata, m, x, config, stutter_free_path):
 	var = arr[len(arr)-1]
 	arr.remove(var)
 	name = '_'.join(arr)
-
 	k = len(stutter_free_path[name])
 	var_name = f"{name}_{var}"
 	dvar_name = f"{name}_d{var}"
