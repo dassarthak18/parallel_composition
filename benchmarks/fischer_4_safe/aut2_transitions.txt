@@ -1,5 +1,0 @@
-e2wr2 true x0=0
-e2eq2 x0>=2.1 true
-e2wr0 true true
-e2eq0 true x0=0
-e2ne2 x0>=2.1 true

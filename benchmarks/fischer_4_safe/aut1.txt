@@ -1,5 +1,0 @@
-set test e1wr1
-test cs e1eq1
-cs idle e1wr0
-idle set e1eq0
-test idle e1ne1

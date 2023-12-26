@@ -1,4 +1,0 @@
-set x0'=c x0<=1
-test x0'=c true
-cs x0'=c true
-idle x0'=c true

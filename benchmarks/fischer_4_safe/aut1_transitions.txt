@@ -1,5 +1,0 @@
-e1wr1 true x0=0
-e1eq1 x0>=2.1 true
-e1wr0 true true
-e1eq0 true x0=0
-e1ne1 x0>=2.1 true
