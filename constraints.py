@@ -30,6 +30,9 @@ def read_graph(filename):
 		G.add_edge(n,n, transition=f'{name}_stutter_{i}')
 		i = i+1
 
+	#for i in G.edges.data():
+	#	print(i)
+
 	return G
 
 # Function to read automata specs from file and store as a 2-tuple dictionary
@@ -234,9 +237,12 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 			name = files[i]
 		for j in shared_dic:
 			for l in graphs[i].edges.data():
-				if l[2]['transition'] == j:
-					shared_dic[j].append(name)
-					break
+				try:
+					if l[2]['transition'] == j:
+						shared_dic[j].append(name)
+						break
+				except:
+					continue
 	local_dic = {}
 	for i in stutter_dic:
 		local_dic[i] = set()
@@ -252,9 +258,12 @@ def pruning_constraints(graphs, files, S, stutter, shared, local, k):
 			name = files[i]
 		for j in local:
 			for l in graphs[i].edges.data():
-				if l[2]['transition'] in j:
-					local_dic[name].add(l[2]['transition'])
-					break
+				try:
+					if l[2]['transition'] in j:
+						local_dic[name].add(l[2]['transition'])
+						break
+				except:
+					continue
 	
 	''' GLOBAL WAITING
 	all member automata are not allowed

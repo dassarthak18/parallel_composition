@@ -19,6 +19,10 @@ try:
 		f"benchmarks/{string}/rod_4",f"benchmarks/{string}/rod_5",f"benchmarks/{string}/controller"]
 		global_vars = []
 		local_vars = ["x"]
+	elif "tank" in string:
+		files = [f"benchmarks/{string}/tank",f"benchmarks/{string}/burner",f"benchmarks/{string}/thermometer"]
+		global_vars = ["x"]
+		local_vars = ["y","z"]
 except:
 	print(sys.argv) # for debug
 	print("Please enter the name of the benchmark, depth of BMC, time horizon and variable for plotting as command line arguments.")
@@ -44,7 +48,7 @@ for depth in range(1,n+1):
 		S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
 
 	stutter, shared, local = get_all_vars(graphs, files, S, depth) # Get all variable names
-	S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
+	#S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
 
 	# Getting and printing the model for the run
 	paths = []
