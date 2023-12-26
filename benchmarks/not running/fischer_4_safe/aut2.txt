@@ -1,0 +1,5 @@
+set test e2wr2
+test cs e2eq2
+cs idle e2wr0
+idle set e2eq0
+test idle e2ne2
