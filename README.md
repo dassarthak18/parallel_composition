@@ -9,3 +9,7 @@ To run unsafe instance of NRS 5 and get counterexample, run (with a minimum boun
 To run safe instance of NRS 5 for a bound of 15, run:
 
 `python3 main.py nrs_5_safe 15 100 controller_x`
+
+To run safe instance of Tank-Burner-Thermometer for a bound of 15, run:
+
+`python3 main.py tank 15 100 x`
