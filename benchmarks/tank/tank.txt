@@ -1,0 +1,6 @@
+t1 t2 B
+t2 t3 Off
+t3 t4 C
+t4 t1 On
+t1 t3 Off
+t3 t1 On

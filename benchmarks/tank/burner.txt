@@ -1,0 +1,4 @@
+b1 b2 TurnOn
+b2 b3 On
+b3 b4 TurnOff
+b4 b1 Off
