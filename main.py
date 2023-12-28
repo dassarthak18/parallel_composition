@@ -48,7 +48,7 @@ for depth in range(1,n+1):
 		S = generate_constraints(graphs[i], S, depth, files[i]+".cfg")
 
 	stutter, shared, local = get_all_vars(graphs, files, S, depth) # Get all variable names
-	#S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
+	S = pruning_constraints(graphs, files, S, stutter, shared, local, depth)
 
 	# Getting and printing the model for the run
 	paths = []
@@ -62,7 +62,7 @@ for depth in range(1,n+1):
 		print("Retrieved path:", stutter_free_path)
 		#for i in aut_path:
 		#	print(f"{i}: {aut_path[i]}")
-		#counterexample = check_feasibility(aut_path, graphs, automata, files, config, T, shared, global_vars, local_vars, depth)
+		counterexample = check_feasibility(aut_path, graphs, automata, files, config, T, shared, global_vars, local_vars, depth)
 		count = count+1
 		if counterexample != []:
 			break
@@ -73,8 +73,8 @@ for depth in range(1,n+1):
 if counterexample == []:
     print("Safe.")
 else:
-	for d in counterexample.decls():
-		print(f"{d.name()} = {counterexample[d]}")
+	#for d in counterexample.decls():
+	#	print(f"{d.name()} = {counterexample[d]}")
 	plot_CE(graphs, automata, counterexample, var, config, stutter_free_path)
 
 	'''

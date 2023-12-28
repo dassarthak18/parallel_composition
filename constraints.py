@@ -497,6 +497,7 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 						x_0 = z3.Real(f"{matching_element[0]}_{len(path)}")
 					t = z3.Real(f"{i}_t_{len(path)+1}")
 					S.add(t >= 0, t <= T)
+					a = float(str(a))
 					if a != 0: # Affine ODE
 						e = np.exp(1)
 						S.add(x == ((a*x_0 + b)*e**(a*t) - b)/a)
@@ -555,6 +556,7 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 					x_0 = z3.Real(f"{matching_element[0]}_{k}")
 				t = z3.Real(f"{i}_t_{k+1}")
 				S.add(t >= 0, t <= T)
+				a = float(str(a))
 				if a != 0: # Affine ODE
 					e = np.exp(1)
 					S.add(x == ((a*x_0 + b)*e**(a*t) - b)/a)
@@ -652,55 +654,38 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 		we have $\sum_{n=0}^{j-1}{t_n^{G_1}} = \sum_{n=0}^{j'-1}{t_n^{G_2}}$
 		'''
 		path = deepcopy(stutter_free_path)
-		counters = {}
+		sync_trans = {}
 		for i in path:
-			counters[i] = 0
-
-		while len(path) > 0:
-			trans = {}
-			for i in path:
-				trans[i] = path[i][counters[i]]
-			
-			sync_trans = {}
-			for key, value in trans.items():
-				if value in sync_trans:
-					sync_trans[value].append(key)
+			for j in path[i]:
+				if j not in sync_trans:
+					sync_trans[j] = set([i])
 				else:
-					sync_trans[value] = [key]
-			sync_trans_filtered = {key: value for key, value in sync_trans.items() if len(value) > 1}
-			
-			for i in sync_trans_filtered:
-				summ = []
-				for j in sync_trans_filtered[i]:
-					arr = []
-					for k in range(counters[j]+1):
-						t_var = z3.Real(f"{j}_t_{k+1}")
-						arr.append(t_var)
-					summ.append(arr)
+					sync_trans[j].add(i)
+		sync_trans_filtered = {key: value for key, value in sync_trans.items() if len(value) > 1}
+		#print(sync_trans_filtered)
 
-				string_summ = []
-				for a1 in range(len(summ)):
-					string = ""
-					for b1 in range(len(summ[a1])):
-						if b1 == len(summ[a1])-1:
-							string += f"summ[{a1}][{b1}]"
-						else:
-							string += f"summ[{a1}][{b1}]+"
-					string_summ.append(string)
-				for a1 in range(len(string_summ)-1):
-					exec(f"S.add({string_summ[a1]}=={string_summ[a1+1]})")
-			for i in sync_trans_filtered:
-				for j in sync_trans_filtered[i]:
-					counters[j] += 1
-			
-			temp_counters = deepcopy(counters)
-			temp_path = deepcopy(path)
-			for i in path:
-				if counters[i] == len(path[i]):
-					temp_counters.pop(i)
-					temp_path.pop(i)
-			counters = temp_counters
-			path = temp_path
+		for i in sync_trans_filtered:
+			summ = []
+			for j in sync_trans_filtered[i]:
+				arr = []
+				counter = path[j].index(i)
+				for k in range(counter+1):
+					t_var = z3.Real(f"{j}_t_{k+1}")
+					arr.append(t_var)
+				summ.append(arr)
+
+			string_summ = []
+			for a1 in range(len(summ)):
+				string = ""
+				for b1 in range(len(summ[a1])):
+					if b1 == len(summ[a1])-1:
+						string += f"summ[{a1}][{b1}]"
+					else:
+						string += f"summ[{a1}][{b1}]+"
+				string_summ.append(string)
+			for a1 in range(len(string_summ)-1):
+				exec(f"S.add({string_summ[a1]}=={string_summ[a1+1]})")
+				#print(S.assertions()[-1])
 
 	''' SHARED VARIABLES:
 	For shared variables, the values are equal at every timestep.
@@ -722,8 +707,8 @@ def check_feasibility(aut_path, graphs, automata, files, config, T, shared, glob
 
 def compute_flow(flow, x_0, t):
 	a1, b1 = extract_flow_coefficients(flow)
-	a = float(a1)
-	b = float(b1)
+	a = float(str(a1))
+	b = float(str(b1))
 	if a != 0: # Affine ODE
 		e = np.exp(1)
 		val = ((a*x_0 + b)*e**(a*t) - b)/a
